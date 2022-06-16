@@ -6,6 +6,7 @@ const fs = require("fs");
 const ethers = require("ethers");
 const express = require("express");
 const eventFunc = require("./eventHandler");
+const calFunc = require("./calculate");
 
 const address = JSON.parse(fs.readFileSync("./address.json", "utf8"));
 const pairContractJSON = JSON.parse(
@@ -25,13 +26,39 @@ const QuickContract = new ethers.Contract(
 
 eventFunc.on(QuickContract);
 
+// poolのトークン量の変数
+// TODO　gitanesさんにreserve周りの実装をしてもらいたいです！
+let jpycReserves = ethers.BigNumber.from("1300000000000000000000000"); // BigNumber型で保持
+let usdcReserves = ethers.BigNumber.from("10000000000"); //BigNumber型で保持
+const amountIn_jpyc = 1300; // 取引量
+const amountIn_usdc = 10;  // 取引量
+
 // REST API
 const app = express();
 const server = app.listen(3002, () => {
   console.log("Node.js is listening to PORT:", server.address().port);
 });
 
-app.get("/test", (req, res, next) => {
-  res.send("hello world");
-  console.log(next);
-});
+app.get("/rate", (req, res, next) => {
+    const sellJPYC = calFunc.getRate(
+        calFunc.strToFloat(address.TOKEN.JPYC.Decimals, jpycReserves.toString()),
+        calFunc.strToFloat(address.TOKEN.USDC.Decimals, usdcReserves.toString()),
+        amountIn_jpyc
+        );
+    const buyJPYC = calFunc.getRate(
+        calFunc.strToFloat(address.TOKEN.USDC.Decimals, usdcReserves.toString()),
+        calFunc.strToFloat(address.TOKEN.JPYC.Decimals, jpycReserves.toString()),
+        amountIn_usdc
+        );
+    res.send({
+        "QUICKSWAP":{
+            "sell":amountIn_jpyc/sellJPYC,
+            "buy":buyJPYC/amountIn_usdc
+        },
+        "SUSHISWAP":{
+            "sell":0,
+            "buy":0
+        }
+    });
+  });
+  
