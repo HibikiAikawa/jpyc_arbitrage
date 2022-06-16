@@ -5,7 +5,7 @@ const fs = require("fs");
 // const Tx = require("ethereumjs-tx").Transaction;
 const ethers = require("ethers");
 const express = require("express");
-const quickswap = require("./quickswapEventHandler");
+const eventFunc = require("./eventHandler");
 
 const address = JSON.parse(fs.readFileSync("./address.json", "utf8"));
 const pairContractJSON = JSON.parse(
@@ -17,13 +17,13 @@ const pairContractAbi = pairContractJSON.abi;
 // TODO infra API取得
 const provider = ethers.getDefaultProvider("matic");
 const signer = new ethers.Wallet(process.env.SEACRET_ADDRESS, provider);
-const pairContract = new ethers.Contract(
-  address.QUICKSWAP,
+const QuickContract = new ethers.Contract(
+  address.POOL.QUICKSWAP,
   pairContractAbi,
   signer
 );
 
-quickswap.on(pairContract);
+eventFunc.on(QuickContract);
 
 // REST API
 const app = express();
