@@ -23,7 +23,28 @@ const QuickContract = new ethers.Contract(
   signer
 );
 
-eventFunc.on(QuickContract);
+let jpycReserves;
+let usdcReserves;
+
+const updateReserves = async () => {
+  const reserves = await QuickContract.getReserves();
+  [jpycReserves, usdcReserves] = reserves;
+  console.log(
+    "first: ",
+    jpycReserves.toString(),
+    ", ",
+    usdcReserves.toString()
+  );
+  
+  eventFunc.on(QuickContract, [jpycReserves, usdcReserves]);
+
+  setInterval(async () => {
+    const latestReserves = await QuickContract.getReserves();
+    [jpycReserves, usdcReserves] = latestReserves; // 値がズレてるか確認せず代入
+    console.log("latest: ", [jpycReserves.toString(), usdcReserves.toString()]);
+  }, 300000); // 5分
+};
+updateReserves()
 
 // REST API
 const app = express();

@@ -1,3 +1,7 @@
+const calc =  (reserves) => {
+    reserves[0]++
+    reserves[1]++
+}
 // emitされたイベントに反応する
 const onMint = (senderAddress, amount0, amount1) => {
     console.log("senderAddress: ", senderAddress);
@@ -17,10 +21,11 @@ const onSwap = (senderAddress, amount0In, amount1In, amount0Out, amount1Out, to)
     console.log("amount0In: ", amount0In, ", amount1In: ", amount1In);
     console.log("amount0Out: ", amount0Out, ", amount1Out: ", amount1Out);
     console.log("to: ", to);
+    calc(reserves)
+    console.log("event: ", reserves);
 };
 
-const on = (pairContract) => {
-    console.log('on read');
+const on = (pairContract, reserves) => {
     pairContract.on("Mint", onMint);
     pairContract.on("Burn", onBurn);
     pairContract.on("Swap", onSwap);
