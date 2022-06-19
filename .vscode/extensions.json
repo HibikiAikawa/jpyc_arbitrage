@@ -1,4 +1,4 @@
 {
-  "recommendations": ["JuanBlanco.solidity"],
+  "recommendations": ["JuanBlanco.solidity", "dbaeumer.vscode-eslint", "esbenp.prettier-vscode", "mhutchie.git-graph"],
   "unwantedRecommendations": []
 }
