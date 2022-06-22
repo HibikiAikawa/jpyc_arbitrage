@@ -1,7 +1,7 @@
-const calc =  (reserves) => {
-    reserves[0]++
-    reserves[1]++
-}
+/**
+ * @type {ethers.ethers.BigNumber} 
+ */
+const reserves = require("./main")
 // emitされたイベントに反応する
 const onMint = (senderAddress, amount0, amount1) => {
     console.log("senderAddress: ", senderAddress);
@@ -17,15 +17,17 @@ const onBurn = (senderAddress, amount0, amount1, to) => {
 };
 
 const onSwap = (senderAddress, amount0In, amount1In, amount0Out, amount1Out, to) => {
-    console.log("senderAddress: ", senderAddress);
-    console.log("amount0In: ", amount0In, ", amount1In: ", amount1In);
-    console.log("amount0Out: ", amount0Out, ", amount1Out: ", amount1Out);
-    console.log("to: ", to);
-    calc(reserves)
-    console.log("event: ", reserves);
+    console.log("from: ", senderAddress, "to: ", to);
+    if(amount0In.isZero()) console.log("jpyc(out): ", amount0Out.toString());
+    if(amount0Out.isZero()) console.log("jpyc(in): ", amount0In.toString());
+    if(amount1In.isZero()) console.log("usdc(out): ", amount1Out.toString());
+    if(amount1Out.isZero()) console.log("usdc(in): ", amount1In.toString());
+    reserves[0] = reserves[0].add(amount0In).sub(amount0Out);
+    reserves[1] += amount1In - amount1Out;
+    console.log("event: ", reserves[0].toString(), reserves[1].toString());
 };
 
-const on = (pairContract, reserves) => {
+const on = (pairContract) => {
     pairContract.on("Mint", onMint);
     pairContract.on("Burn", onBurn);
     pairContract.on("Swap", onSwap);
