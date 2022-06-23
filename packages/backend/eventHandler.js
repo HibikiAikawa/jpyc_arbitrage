@@ -1,7 +1,4 @@
-/**
- * @type {ethers.ethers.BigNumber} 
- */
-const reserves = require("./main")
+const main = require("./main")
 // emitされたイベントに反応する
 const onMint = (senderAddress, amount0, amount1) => {
     console.log("senderAddress: ", senderAddress);
@@ -22,9 +19,9 @@ const onSwap = (senderAddress, amount0In, amount1In, amount0Out, amount1Out, to)
     if(amount0Out.isZero()) console.log("jpyc(in): ", amount0In.toString());
     if(amount1In.isZero()) console.log("usdc(out): ", amount1Out.toString());
     if(amount1Out.isZero()) console.log("usdc(in): ", amount1In.toString());
-    reserves[0] = reserves[0].add(amount0In).sub(amount0Out);
-    reserves[1] += amount1In - amount1Out;
-    console.log("event: ", reserves[0].toString(), reserves[1].toString());
+    main.reserves[0] = main.reserves[0].add(amount0In).sub(amount0Out);
+    main.reserves[1] = main.reserves[1].add(amount1In).sub(amount1Out);
+    console.log("event: ", main.reserves[0].toString(), main.reserves[1].toString());
 };
 
 const on = (pairContract) => {
@@ -34,3 +31,4 @@ const on = (pairContract) => {
 }
 
 exports.on = on;
+exports.reserves = main.reserves;

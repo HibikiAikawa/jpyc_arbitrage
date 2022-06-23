@@ -26,7 +26,7 @@ const QuickContract = new ethers.Contract(
 
 // poolのトークン量の変数
 let jpycReserves =  ethers.BigNumber.from("0");
-let usdcReserves =  ethers.BigNumber.from("0");;
+let usdcReserves =  ethers.BigNumber.from("0");
 
 const updateReserves = async () => {
   const reserves = await QuickContract.getReserves();
@@ -42,10 +42,11 @@ const updateReserves = async () => {
   eventFunc.on(QuickContract, [jpycReserves, usdcReserves]);
 
   setInterval(async () => {
-    console.log("calculate: ", [jpycReserves.toString(), usdcReserves.toString()]);
+    console.log("calculate:", eventFunc.reserves);
+    console.log("calculate:", [eventFunc.reserves[0].toString(), eventFunc.reserves[1].toString()]);
     const latestReserves = await QuickContract.getReserves();
     [jpycReserves, usdcReserves] = latestReserves; // 値がズレてるか確認せず代入
-    console.log("latest: ", [jpycReserves.toString(), usdcReserves.toString()]);
+    console.log("latest   :", [jpycReserves.toString(), usdcReserves.toString()]);
   }, 300000); // 5分
 };
 updateReserves()
