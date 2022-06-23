@@ -25,43 +25,41 @@ const QuickContract = new ethers.Contract(
 );
 
 // poolのトークン量の変数
-let jpycReserves
-let usdcReserves
+let jpycReserves;
+let usdcReserves;
 
-const onSwap = (senderAddress, amount0In, amount1In, amount0Out, amount1Out, to) => {
+const onSwap = (
+  senderAddress,
+  amount0In,
+  amount1In,
+  amount0Out,
+  amount1Out,
+  to
+) => {
   console.log("from: ", senderAddress, "to: ", to);
-  if(amount0In.isZero()) console.log("jpyc(out): ", amount0Out.toString());
-  if(amount0Out.isZero()) console.log("jpyc(in): ", amount0In.toString());
-  if(amount1In.isZero()) console.log("usdc(out): ", amount1Out.toString());
-  if(amount1Out.isZero()) console.log("usdc(in): ", amount1In.toString());
-  jpycReserves[0] = jpycReserves[0].add(amount0In).sub(amount0Out);
-  usdcReserves[1] = usdcReserves[1].add(amount1In).sub(amount1Out);
-  console.log("event: ", jpycReserves[0].toString(), usdcReserves[1].toString());
-}
+  if (amount0In.isZero()) console.log("jpyc(out): ", amount0Out.toString());
+  if (amount0Out.isZero()) console.log("jpyc(in): ", amount0In.toString());
+  if (amount1In.isZero()) console.log("usdc(out): ", amount1Out.toString());
+  if (amount1Out.isZero()) console.log("usdc(in): ", amount1In.toString());
+  jpycReserves = jpycReserves.add(amount0In).sub(amount0Out);
+  usdcReserves = usdcReserves.add(amount1In).sub(amount1Out);
+  console.log("event: ", [jpycReserves.toString(), usdcReserves.toString()]);
+};
 
 const updateReserves = async () => {
   const reserves = await QuickContract.getReserves();
   [jpycReserves, usdcReserves] = reserves;
-  console.log(
-    "first: ",
-    jpycReserves.toString(),
-    ", ",
-    usdcReserves.toString()
-  );
-  
+  console.log("first: ", [jpycReserves.toString(), usdcReserves.toString()]);
+
   QuickContract.on("Swap", onSwap);
 
   setInterval(async () => {
-    console.log("calculate:", [jpycReserves.toString(), usdcReserves.toString()]);
     const latestReserves = await QuickContract.getReserves();
     [jpycReserves, usdcReserves] = latestReserves; // 値がズレてるか確認せず代入
-    console.log("latest   :", [jpycReserves.toString(), usdcReserves.toString()]);
+    console.log("latest:", [jpycReserves.toString(), usdcReserves.toString()]);
   }, 300000); // 5分
 };
-updateReserves()
-
-const amountIn_jpyc = 1300; // 取引量
-const amountIn_usdc = 10;  // 取引量
+updateReserves();
 
 // REST API
 const app = express();
@@ -70,24 +68,5 @@ const server = app.listen(3002, () => {
 });
 
 app.get("/rate", (req, res, next) => {
-  const sellJPYC = calFunc.getRate(
-      calFunc.strToFloat(address.TOKEN.JPYC.Decimals, jpycReserves.toString()),
-      calFunc.strToFloat(address.TOKEN.USDC.Decimals, usdcReserves.toString()),
-      amountIn_jpyc
-      );
-  const buyJPYC = calFunc.getRate(
-      calFunc.strToFloat(address.TOKEN.USDC.Decimals, usdcReserves.toString()),
-      calFunc.strToFloat(address.TOKEN.JPYC.Decimals, jpycReserves.toString()),
-      amountIn_usdc
-      );
-  res.send({
-      "QUICKSWAP":{
-          "sell":amountIn_jpyc/sellJPYC,
-          "buy":buyJPYC/amountIn_usdc
-      },
-      "SUSHISWAP":{
-          "sell":0,
-          "buy":0
-      }
-  });
+  res.send(calFunc.rate(jpycReserves, usdcReserves));
 });
