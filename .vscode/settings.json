@@ -1,0 +1,12 @@
+{
+  "files.exclude": {
+    ".vscode": true,
+    ".gitignore": true,
+    "node_modules": true
+  }
+  //   "solidity.packageDefaultDependenciesContractsDirectory": "",
+  //   "solidity.packageDefaultDependenciesDirectory": "node_modules",
+
+  //   "solidity.enabledAsYouTypeCompilationErrorCheck": true,
+  //   "solidity.linter": "solhint"
+}
