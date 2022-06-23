@@ -5,7 +5,7 @@ const fs = require("fs");
 // const Tx = require("ethereumjs-tx").Transaction;
 const ethers = require("ethers");
 const express = require("express");
-const eventFunc = require("./eventHandler");
+// const eventFunc = require("./eventHandler");
 const calFunc = require("./calculate");
 
 const address = JSON.parse(fs.readFileSync("./address.json", "utf8"));
@@ -25,8 +25,19 @@ const QuickContract = new ethers.Contract(
 );
 
 // poolのトークン量の変数
-let jpycReserves =  ethers.BigNumber.from("0");
-let usdcReserves =  ethers.BigNumber.from("0");
+let jpycReserves
+let usdcReserves
+
+const onSwap = (senderAddress, amount0In, amount1In, amount0Out, amount1Out, to) => {
+  console.log("from: ", senderAddress, "to: ", to);
+  if(amount0In.isZero()) console.log("jpyc(out): ", amount0Out.toString());
+  if(amount0Out.isZero()) console.log("jpyc(in): ", amount0In.toString());
+  if(amount1In.isZero()) console.log("usdc(out): ", amount1Out.toString());
+  if(amount1Out.isZero()) console.log("usdc(in): ", amount1In.toString());
+  jpycReserves[0] = jpycReserves[0].add(amount0In).sub(amount0Out);
+  usdcReserves[1] = usdcReserves[1].add(amount1In).sub(amount1Out);
+  console.log("event: ", jpycReserves[0].toString(), usdcReserves[1].toString());
+}
 
 const updateReserves = async () => {
   const reserves = await QuickContract.getReserves();
@@ -38,12 +49,10 @@ const updateReserves = async () => {
     usdcReserves.toString()
   );
   
-  exports.reserves = [jpycReserves, usdcReserves]
-  eventFunc.on(QuickContract, [jpycReserves, usdcReserves]);
+  QuickContract.on("Swap", onSwap);
 
   setInterval(async () => {
-    console.log("calculate:", eventFunc.reserves);
-    console.log("calculate:", [eventFunc.reserves[0].toString(), eventFunc.reserves[1].toString()]);
+    console.log("calculate:", [jpycReserves.toString(), usdcReserves.toString()]);
     const latestReserves = await QuickContract.getReserves();
     [jpycReserves, usdcReserves] = latestReserves; // 値がズレてるか確認せず代入
     console.log("latest   :", [jpycReserves.toString(), usdcReserves.toString()]);
