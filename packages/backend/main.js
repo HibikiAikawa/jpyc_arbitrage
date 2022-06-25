@@ -44,15 +44,15 @@ const onSwapQuick = (
   to
 ) => {
   console.log("(Quick) from:", senderAddress, "to:", to);
-  if (amount0In.isZero()) console.log("jpyc(out):", amount0Out.toString());
-  if (amount0Out.isZero()) console.log("jpyc(in): ", amount0In.toString());
-  if (amount1In.isZero()) console.log("usdc(out):", amount1Out.toString());
-  if (amount1Out.isZero()) console.log("usdc(in): ", amount1In.toString());
-  quickJpycReserves = quickJpycReserves.add(amount0In).sub(amount0Out);
-  quickUsdcReserves = quickUsdcReserves.add(amount1In).sub(amount1Out);
-  console.log("event: ", [
-    quickJpycReserves.toString(),
+  if (amount0In.isZero()) console.log("usdc(out):", amount0Out.toString());
+  if (amount0Out.isZero()) console.log("usdc(in): ", amount0In.toString());
+  if (amount1In.isZero()) console.log("jpyc(out):", amount1Out.toString());
+  if (amount1Out.isZero()) console.log("jpyc(in): ", amount1In.toString());
+  quickUsdcReserves = quickUsdcReserves.add(amount0In).sub(amount0Out);
+  quickJpycReserves = quickJpycReserves.add(amount1In).sub(amount1Out);
+  console.log("(Quick) event: ", [
     quickUsdcReserves.toString(),
+    quickJpycReserves.toString(),
   ]);
 };
 
@@ -65,30 +65,30 @@ const onSwapSushi = (
   to
 ) => {
   console.log("(Sushi) from:", senderAddress, "to:", to);
-  if (amount0In.isZero()) console.log("jpyc(out):", amount0Out.toString());
-  if (amount0Out.isZero()) console.log("jpyc(in): ", amount0In.toString());
-  if (amount1In.isZero()) console.log("usdc(out):", amount1Out.toString());
-  if (amount1Out.isZero()) console.log("usdc(in): ", amount1In.toString());
-  sushiJpycReserves = sushiJpycReserves.add(amount0In).sub(amount0Out);
-  sushiUsdcReserves = sushiUsdcReserves.add(amount1In).sub(amount1Out);
-  console.log("event: ", [
-    sushiJpycReserves.toString(),
+  if (amount0In.isZero()) console.log("usdc(out):", amount0Out.toString());
+  if (amount0Out.isZero()) console.log("usdc(in): ", amount0In.toString());
+  if (amount1In.isZero()) console.log("jpyc(out):", amount1Out.toString());
+  if (amount1Out.isZero()) console.log("jpyc(in): ", amount1In.toString());
+  sushiUsdcReserves = sushiUsdcReserves.add(amount0In).sub(amount0Out);
+  sushiJpycReserves = sushiJpycReserves.add(amount1In).sub(amount1Out);
+  console.log("(Sushi) event: ", [
     sushiUsdcReserves.toString(),
+    sushiJpycReserves.toString(),
   ]);
 };
 
 const updateReserves = async () => {
   const quickReserves = await QuickContract.getReserves();
   const sushiReserves = await SushiContract.getReserves();
-  [quickJpycReserves, quickUsdcReserves] = quickReserves;
-  [sushiJpycReserves, sushiUsdcReserves] = sushiReserves;
+  [quickUsdcReserves, quickJpycReserves] = quickReserves;
+  [sushiUsdcReserves, sushiJpycReserves] = sushiReserves;
   console.log("(Quick) first: ", [
-    quickJpycReserves.toString(),
     quickUsdcReserves.toString(),
+    quickJpycReserves.toString(),
   ]);
   console.log("(Sushi) first: ", [
-    sushiJpycReserves.toString(),
     sushiUsdcReserves.toString(),
+    sushiJpycReserves.toString(),
   ]);
 
   QuickContract.on("Swap", onSwapQuick);
@@ -97,15 +97,15 @@ const updateReserves = async () => {
   setInterval(async () => {
     const quickLatestReserves = await QuickContract.getReserves();
     const sushiLatestReserves = await SushiContract.getReserves();
-    [quickJpycReserves, quickUsdcReserves] = quickLatestReserves;
-    [sushiJpycReserves, sushiUsdcReserves] = sushiLatestReserves;
+    [quickUsdcReserves, quickJpycReserves] = quickLatestReserves;
+    [sushiUsdcReserves, sushiJpycReserves] = sushiLatestReserves;
     console.log("(Quick) latest:", [
-      quickJpycReserves.toString(),
       quickUsdcReserves.toString(),
+      quickJpycReserves.toString(),
     ]);
     console.log("(Sushi) latest:", [
-      sushiJpycReserves.toString(),
       sushiUsdcReserves.toString(),
+      sushiJpycReserves.toString(),
     ]);
   }, 300000); // 5分
 };

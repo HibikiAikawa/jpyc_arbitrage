@@ -62,13 +62,13 @@ const rate = (
     strToFloat(address.TOKEN.JPYC.Decimals, quickJpycReserves.toString()),
     amountInUsdc
   );
-  // amountInJpyc売って、買えるquickOutUsdc
+  // amountInJpyc売って、買えるsushiOutUsdc
   const sushiOutUsdc = getRate(
     strToFloat(address.TOKEN.JPYC.Decimals, sushiJpycReserves.toString()),
     strToFloat(address.TOKEN.USDC.Decimals, sushiUsdcReserves.toString()),
     amountInJpyc
   );
-  // amountInUsdc売って、買えるquickOutJpyc
+  // amountInUsdc売って、買えるsushikOutJpyc
   const sushiOutJpyc = getRate(
     strToFloat(address.TOKEN.USDC.Decimals, sushiUsdcReserves.toString()),
     strToFloat(address.TOKEN.JPYC.Decimals, sushiJpycReserves.toString()),
