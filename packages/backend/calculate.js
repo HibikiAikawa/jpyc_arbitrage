@@ -12,8 +12,8 @@ const amountInUsdc = 10; // 取引量
  * @returns
  */
 const strToFloat = (decimals, amount, minimum = 5) => {
-  const _amount = amount.substr(0, amount.length - (decimals - minimum));
-  const floatAmount = parseFloat(_amount) / 10 ** minimum;
+  const alignedAmount = amount.substring(0, amount.length - (decimals - minimum));
+  const floatAmount = parseFloat(alignedAmount) / 10 ** minimum;
   return floatAmount;
 };
 

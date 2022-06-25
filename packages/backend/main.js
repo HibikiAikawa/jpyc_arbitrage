@@ -67,6 +67,6 @@ const server = app.listen(3002, () => {
   console.log("Node.js is listening to PORT:", server.address().port);
 });
 
-app.get("/rate", (req, res, next) => {
+app.get("/rate", (req, res) => {
   res.send(calFunc.rate(jpycReserves, usdcReserves));
 });
