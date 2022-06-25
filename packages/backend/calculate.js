@@ -12,7 +12,10 @@ const amountInUsdc = 10; // 取引量
  * @returns
  */
 const strToFloat = (decimals, amount, minimum = 5) => {
-  const alignedAmount = amount.substring(0, amount.length - (decimals - minimum));
+  const alignedAmount = amount.substring(
+    0,
+    amount.length - (decimals - minimum)
+  );
   const floatAmount = parseFloat(alignedAmount) / 10 ** minimum;
   return floatAmount;
 };
@@ -34,44 +37,29 @@ const getRate = (reserveIn, reserveOut, amountIn, margin = 0.3) => {
 };
 
 /**
- * JPYCを売るときのレートを計算する
- * @param {ethers.ethers.BigNumber} jpycReserves - プールのJPYC量
- * @param {ethers.ethers.BigNumber} usdcReserves - プールのUSDC量
- * @returns - 売りレート
- */
-const sellJPYC = (jpycReserves, usdcReserves) =>
-  getRate(
-    strToFloat(address.TOKEN.JPYC.Decimals, jpycReserves.toString()),
-    strToFloat(address.TOKEN.USDC.Decimals, usdcReserves.toString()),
-    amountInJpyc
-  );
-
-/**
- * JPYCを買うときのレートを計算する
- * @param {ethers.ethers.BigNumber} jpycReserves - プールのJPYC量
- * @param {ethers.ethers.BigNumber} usdcReserves - プールのUSDC量
- * @returns - 買いレート
- */
-const buyJPYC = (jpycReserves, usdcReserves) =>
-  getRate(
-    strToFloat(address.TOKEN.USDC.Decimals, usdcReserves.toString()),
-    strToFloat(address.TOKEN.JPYC.Decimals, jpycReserves.toString()),
-    amountInUsdc
-  );
-
-/**
  * GET /rateのレスポンス
  * @param {ethers.ethers.BigNumber} jpycReserves - プールのJPYC量
  * @param {ethers.ethers.BigNumber} usdcReserves - プールのUSDC量
  * @returns - オブジェクト
  */
 const rate = (jpycReserves, usdcReserves) => {
-  const sell = sellJPYC(jpycReserves, usdcReserves);
-  const buy = buyJPYC(jpycReserves, usdcReserves);
+  // amountInJpyc売って、買えるquickOutUsdc
+  const quickOutUsdc = getRate(
+    strToFloat(address.TOKEN.JPYC.Decimals, jpycReserves.toString()),
+    strToFloat(address.TOKEN.USDC.Decimals, usdcReserves.toString()),
+    amountInJpyc
+  );
+  // amountInUsdc売って、買えるquickOutJpyc
+  const quickOutJpyc = getRate(
+    strToFloat(address.TOKEN.USDC.Decimals, usdcReserves.toString()),
+    strToFloat(address.TOKEN.JPYC.Decimals, jpycReserves.toString()),
+    amountInUsdc
+  );
+  
   return {
     QUICKSWAP: {
-      sell: amountInJpyc / sell,
-      buy: buy / amountInUsdc,
+      sell: amountInJpyc / quickOutUsdc,
+      buy: quickOutJpyc / amountInUsdc,
     },
     SUSHISWAP: {
       sell: 0,
