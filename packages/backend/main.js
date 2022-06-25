@@ -23,12 +23,19 @@ const QuickContract = new ethers.Contract(
   pairContractAbi,
   signer
 );
+const SushiContract = new ethers.Contract(
+  address.POOL.SUSHISWAP,
+  pairContractAbi,
+  signer
+);
 
 // poolのトークン量の変数
-let jpycReserves;
-let usdcReserves;
+let quickJpycReserves;
+let quickUsdcReserves;
+let sushiJpycReserves;
+let sushiUsdcReserves;
 
-const onSwap = (
+const onSwapQuick = (
   senderAddress,
   amount0In,
   amount1In,
@@ -36,27 +43,70 @@ const onSwap = (
   amount1Out,
   to
 ) => {
-  console.log("from: ", senderAddress, "to: ", to);
-  if (amount0In.isZero()) console.log("jpyc(out): ", amount0Out.toString());
+  console.log("(Quick) from:", senderAddress, "to:", to);
+  if (amount0In.isZero()) console.log("jpyc(out):", amount0Out.toString());
   if (amount0Out.isZero()) console.log("jpyc(in): ", amount0In.toString());
-  if (amount1In.isZero()) console.log("usdc(out): ", amount1Out.toString());
+  if (amount1In.isZero()) console.log("usdc(out):", amount1Out.toString());
   if (amount1Out.isZero()) console.log("usdc(in): ", amount1In.toString());
-  jpycReserves = jpycReserves.add(amount0In).sub(amount0Out);
-  usdcReserves = usdcReserves.add(amount1In).sub(amount1Out);
-  console.log("event: ", [jpycReserves.toString(), usdcReserves.toString()]);
+  quickJpycReserves = quickJpycReserves.add(amount0In).sub(amount0Out);
+  quickUsdcReserves = quickUsdcReserves.add(amount1In).sub(amount1Out);
+  console.log("event: ", [
+    quickJpycReserves.toString(),
+    quickUsdcReserves.toString(),
+  ]);
+};
+
+const onSwapSushi = (
+  senderAddress,
+  amount0In,
+  amount1In,
+  amount0Out,
+  amount1Out,
+  to
+) => {
+  console.log("(Sushi) from:", senderAddress, "to:", to);
+  if (amount0In.isZero()) console.log("jpyc(out):", amount0Out.toString());
+  if (amount0Out.isZero()) console.log("jpyc(in): ", amount0In.toString());
+  if (amount1In.isZero()) console.log("usdc(out):", amount1Out.toString());
+  if (amount1Out.isZero()) console.log("usdc(in): ", amount1In.toString());
+  sushiJpycReserves = sushiJpycReserves.add(amount0In).sub(amount0Out);
+  sushiUsdcReserves = sushiUsdcReserves.add(amount1In).sub(amount1Out);
+  console.log("event: ", [
+    sushiJpycReserves.toString(),
+    sushiUsdcReserves.toString(),
+  ]);
 };
 
 const updateReserves = async () => {
-  const reserves = await QuickContract.getReserves();
-  [jpycReserves, usdcReserves] = reserves;
-  console.log("first: ", [jpycReserves.toString(), usdcReserves.toString()]);
+  const quickReserves = await QuickContract.getReserves();
+  const sushiReserves = await SushiContract.getReserves();
+  [quickJpycReserves, quickUsdcReserves] = quickReserves;
+  [sushiJpycReserves, sushiUsdcReserves] = sushiReserves;
+  console.log("(Quick) first: ", [
+    quickJpycReserves.toString(),
+    quickUsdcReserves.toString(),
+  ]);
+  console.log("(Sushi) first: ", [
+    sushiJpycReserves.toString(),
+    sushiUsdcReserves.toString(),
+  ]);
 
-  QuickContract.on("Swap", onSwap);
+  QuickContract.on("Swap", onSwapQuick);
+  SushiContract.on("Swap", onSwapSushi);
 
   setInterval(async () => {
-    const latestReserves = await QuickContract.getReserves();
-    [jpycReserves, usdcReserves] = latestReserves; // 値がズレてるか確認せず代入
-    console.log("latest:", [jpycReserves.toString(), usdcReserves.toString()]);
+    const quickLatestReserves = await QuickContract.getReserves();
+    const sushiLatestReserves = await SushiContract.getReserves();
+    [quickJpycReserves, quickUsdcReserves] = quickLatestReserves;
+    [sushiJpycReserves, sushiUsdcReserves] = sushiLatestReserves;
+    console.log("(Quick) latest:", [
+      quickJpycReserves.toString(),
+      quickUsdcReserves.toString(),
+    ]);
+    console.log("(Sushi) latest:", [
+      sushiJpycReserves.toString(),
+      sushiUsdcReserves.toString(),
+    ]);
   }, 300000); // 5分
 };
 updateReserves();
@@ -68,5 +118,12 @@ const server = app.listen(3002, () => {
 });
 
 app.get("/rate", (req, res) => {
-  res.send(calFunc.rate(jpycReserves, usdcReserves));
+  res.send(
+    calFunc.rate(
+      quickJpycReserves,
+      quickUsdcReserves,
+      sushiJpycReserves,
+      sushiUsdcReserves
+    )
+  );
 });

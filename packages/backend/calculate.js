@@ -38,32 +38,51 @@ const getRate = (reserveIn, reserveOut, amountIn, margin = 0.3) => {
 
 /**
  * GET /rateのレスポンス
- * @param {ethers.ethers.BigNumber} jpycReserves - プールのJPYC量
- * @param {ethers.ethers.BigNumber} usdcReserves - プールのUSDC量
+ * @param {ethers.ethers.BigNumber} quickJpycReserves - QuickSwapプールのJPYC量
+ * @param {ethers.ethers.BigNumber} quickUsdcReserves - QuickSwapプールのUSDC量
+ * @param {ethers.ethers.BigNumber} sushiJpycReserves - SushiSwapプールのJPYC量
+ * @param {ethers.ethers.BigNumber} sushiUsdcReserves - SushiSwapプールのUSDC量
  * @returns - オブジェクト
  */
-const rate = (jpycReserves, usdcReserves) => {
+const rate = (
+  quickJpycReserves,
+  quickUsdcReserves,
+  sushiJpycReserves,
+  sushiUsdcReserves
+) => {
   // amountInJpyc売って、買えるquickOutUsdc
   const quickOutUsdc = getRate(
-    strToFloat(address.TOKEN.JPYC.Decimals, jpycReserves.toString()),
-    strToFloat(address.TOKEN.USDC.Decimals, usdcReserves.toString()),
+    strToFloat(address.TOKEN.JPYC.Decimals, quickJpycReserves.toString()),
+    strToFloat(address.TOKEN.USDC.Decimals, quickUsdcReserves.toString()),
     amountInJpyc
   );
   // amountInUsdc売って、買えるquickOutJpyc
   const quickOutJpyc = getRate(
-    strToFloat(address.TOKEN.USDC.Decimals, usdcReserves.toString()),
-    strToFloat(address.TOKEN.JPYC.Decimals, jpycReserves.toString()),
+    strToFloat(address.TOKEN.USDC.Decimals, quickUsdcReserves.toString()),
+    strToFloat(address.TOKEN.JPYC.Decimals, quickJpycReserves.toString()),
     amountInUsdc
   );
-  
+  // amountInJpyc売って、買えるquickOutUsdc
+  const sushiOutUsdc = getRate(
+    strToFloat(address.TOKEN.JPYC.Decimals, sushiJpycReserves.toString()),
+    strToFloat(address.TOKEN.USDC.Decimals, sushiUsdcReserves.toString()),
+    amountInJpyc
+  );
+  // amountInUsdc売って、買えるquickOutJpyc
+  const sushiOutJpyc = getRate(
+    strToFloat(address.TOKEN.USDC.Decimals, sushiUsdcReserves.toString()),
+    strToFloat(address.TOKEN.JPYC.Decimals, sushiJpycReserves.toString()),
+    amountInUsdc
+  );
+
   return {
     QUICKSWAP: {
       sell: amountInJpyc / quickOutUsdc,
       buy: quickOutJpyc / amountInUsdc,
     },
     SUSHISWAP: {
-      sell: 0,
-      buy: 0,
+      sell: amountInJpyc / sushiOutUsdc,
+      buy: sushiOutJpyc / amountInUsdc,
     },
   };
 };
