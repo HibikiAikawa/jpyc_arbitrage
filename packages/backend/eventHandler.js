@@ -20,14 +20,17 @@ const onSwap = (
   amount1Out,
   to
 ) => {
-  console.log("senderAddress: ", senderAddress);
-  console.log("amount0In: ", amount0In, ", amount1In: ", amount1In);
-  console.log("amount0Out: ", amount0Out, ", amount1Out: ", amount1Out);
-  console.log("to: ", to);
+  console.log("from: ", senderAddress, "to: ", to);
+  if (amount0In.isZero()) console.log("jpyc(out): ", amount0Out.toString());
+  if (amount0Out.isZero()) console.log("jpyc(in): ", amount0In.toString());
+  if (amount1In.isZero()) console.log("usdc(out): ", amount1Out.toString());
+  if (amount1Out.isZero()) console.log("usdc(in): ", amount1In.toString());
+  // main.reserves[0] = main.reserves[0].add(amount0In).sub(amount0Out);
+  // main.reserves[1] = main.reserves[1].add(amount1In).sub(amount1Out);
+  // console.log("event: ", main.reserves[0].toString(), main.reserves[1].toString());
 };
 
 const on = (pairContract) => {
-  console.log("on read");
   pairContract.on("Mint", onMint);
   pairContract.on("Burn", onBurn);
   pairContract.on("Swap", onSwap);
