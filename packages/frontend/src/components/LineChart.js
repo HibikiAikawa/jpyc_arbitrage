@@ -6,7 +6,7 @@ import Chart from "chart.js/auto";
  * @param {*} props
  * @returns
  */
-const LineChart = ({ id = "myChart", className = "", data = {} }) => {
+const LineChart = ({ className = "", label = "損益グラフ", data = {} }) => {
   const chartRef = useRef();
   //
   useEffect(() => {
@@ -19,15 +19,13 @@ const LineChart = ({ id = "myChart", className = "", data = {} }) => {
     return () => {
       myChart.destroy();
     };
-  }, [id, className, data]);
+  }, [className, data]);
 
   return (
-    <canvas
-      id={id}
-      className={className}
-      style={{ width: "100%", height: "100%" }}
-      ref={chartRef}
-    />
+    <div className={`p-2 ${className}`}>
+      <p className="text-xl">{label}</p>
+      <canvas ref={chartRef} />
+    </div>
   );
 };
 

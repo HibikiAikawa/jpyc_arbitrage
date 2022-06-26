@@ -7,10 +7,10 @@ import React, { useEffect, useRef } from "react";
  */
 const Layout = (props) => {
   return (
-    <div className="container" style={{ backgroundColor: "#FAFAFD" }}>
+    <div className={props.className}>
       <h1>JPYC Arbitrage Bot</h1>
       <small>polygon hackhason!!</small>
-      {props.children}
+      <div className={props.contentClassName}> {props.children}</div>
     </div>
   );
 };

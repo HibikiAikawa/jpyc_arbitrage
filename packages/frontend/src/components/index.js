@@ -1,4 +1,6 @@
 import LineChart from "./LineChart";
-import PricePanel from "./PricePanel";
+import PanelSwapPrice from "./PanelSwapPrice";
+import PanelSwapRate from "./PanelSwapRate";
+import PanelTradeHistory from "./PanelTradeHistory";
 
-export { LineChart, PricePanel };
+export { LineChart, PanelSwapPrice, PanelSwapRate, PanelTradeHistory };
