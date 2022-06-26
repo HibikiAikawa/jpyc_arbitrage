@@ -6,6 +6,7 @@ const fs = require("fs");
 const ethers = require("ethers");
 const express = require("express");
 const eventFunc = require("./eventHandler");
+const profitFunc = require("./profit")
 
 const address = JSON.parse(fs.readFileSync("./address.json", "utf8"));
 const pairContractJSON = JSON.parse(
@@ -28,10 +29,18 @@ eventFunc.on(QuickContract);
 // REST API
 const app = express();
 const server = app.listen(3002, () => {
+  profitFunc.init();
   console.log("Node.js is listening to PORT:", server.address().port);
 });
 
-app.get("/test", (req, res, next) => {
-  res.send("hello world");
-  console.log(next);
+app.get("/all", (req, res) => {
+  res.send(profitFunc.all());
+});
+
+app.get("/add", (req, res) => {
+  res.send(profitFunc.add());
+});
+
+app.get("/profit", (req, res) => {
+  res.send(profitFunc.profit());
 });
