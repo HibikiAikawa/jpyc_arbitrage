@@ -2,51 +2,8 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-
-interface IERC20 {
-    function totalSupply() external view returns (uint256);
-
-    function balanceOf(address account) external view returns (uint256);
-
-    function transfer(address recipient, uint256 amount)
-        external
-        returns (bool);
-
-    function allowance(address owner, address spender)
-        external
-        view
-        returns (uint256);
-
-    function approve(address spender, uint256 amount) external returns (bool);
-
-    function transferFrom(
-        address sender,
-        address recipient,
-        uint256 amount
-    ) external returns (bool);
-
-    event Transfer(address indexed from, address indexed to, uint256 value);
-    event Approval(
-        address indexed owner,
-        address indexed spender,
-        uint256 value
-    );
-}
-
-interface IUniswapV2Router {
-    function getAmountsOut(uint256 amountIn, address[] memory path)
-        external
-        view
-        returns (uint256[] memory amounts);
-
-    function swapExactTokensForTokens(
-        uint256 amountIn,
-        uint256 amountOutMin,
-        address[] calldata path,
-        address to,
-        uint256 deadline
-    ) external returns (uint256[] memory amounts);
-}
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router01.sol";
 
 contract Arbitrage is Ownable {
     function swap(
@@ -60,7 +17,7 @@ contract Arbitrage is Ownable {
         path[0] = _tokenIn;
         path[1] = _tokenOut;
         uint256 deadline = block.timestamp + 300;
-        IUniswapV2Router(router).swapExactTokensForTokens(
+        IUniswapV2Router01(router).swapExactTokensForTokens(
             _amount,
             1,
             path,
@@ -79,10 +36,8 @@ contract Arbitrage is Ownable {
         path = new address[](2);
         path[0] = _tokenIn;
         path[1] = _tokenOut;
-        uint256[] memory amountOutMins = IUniswapV2Router(router).getAmountsOut(
-            _amount,
-            path
-        );
+        uint256[] memory amountOutMins = IUniswapV2Router01(router)
+            .getAmountsOut(_amount, path);
         return amountOutMins[path.length - 1];
     }
 
@@ -157,7 +112,11 @@ contract Arbitrage is Ownable {
         return balance;
     }
 
-    function approve(address token, address spender, uint amount) external onlyOwner {
+    function approve(
+        address token,
+        address spender,
+        uint256 amount
+    ) external onlyOwner {
         IERC20(token).approve(spender, amount);
     }
 
