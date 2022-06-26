@@ -20,7 +20,7 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
  */
 
 module.exports = {
-  solidity: "0.5.16",
+  solidity: "0.8.4",
   networks: {
     polygon: {
       url: process.env.POLYGON_URL,

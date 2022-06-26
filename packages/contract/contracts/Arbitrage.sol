@@ -1,63 +1,172 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity =0.5.16;
+pragma solidity ^0.8.4;
+
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 interface IERC20 {
-    function balanceOf(address owner) external view returns (uint);
-    function approve(address spender, uint amount) external returns (bool);
+    function totalSupply() external view returns (uint256);
+
+    function balanceOf(address account) external view returns (uint256);
+
+    function transfer(address recipient, uint256 amount)
+        external
+        returns (bool);
+
+    function allowance(address owner, address spender)
+        external
+        view
+        returns (uint256);
+
+    function approve(address spender, uint256 amount) external returns (bool);
+
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) external returns (bool);
+
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(
+        address indexed owner,
+        address indexed spender,
+        uint256 value
+    );
 }
 
-interface IRouter {
+interface IUniswapV2Router {
+    function getAmountsOut(uint256 amountIn, address[] memory path)
+        external
+        view
+        returns (uint256[] memory amounts);
+
     function swapExactTokensForTokens(
-        uint amountIn,
-        uint amountOutMin,
+        uint256 amountIn,
+        uint256 amountOutMin,
         address[] calldata path,
         address to,
-        uint deadline
-    ) external returns (uint[] memory amounts);
-
-    function getAmountsOut(uint256 amountIn,address[] calldata path) external view returns (uint256[] memory amounts);
-
+        uint256 deadline
+    ) external returns (uint256[] memory amounts);
 }
 
-
-contract Arbitrage {
-
-    function arbitrage(
-        uint amountIn,
-        address to,
-        uint deadline,
-        address[] memory inPath,
-        address[] memory outPath,
-        address tokenAddress,
-        address inRouter,
-        address outRouter,
-        uint amountOutMin
-    ) public {
-        uint initialBalance = IERC20(tokenAddress).balanceOf(msg.sender);
-        IRouter(inRouter).swapExactTokensForTokens(amountIn, 1, inPath, to, deadline);
-        uint balance = IERC20(tokenAddress).balanceOf(msg.sender);
-        uint tradeableAmount = balance - initialBalance;
-        IRouter(outRouter).swapExactTokensForTokens(tradeableAmount, amountOutMin, outPath, to, deadline);
-    }
-
+contract Arbitrage is Ownable {
     function swap(
-        uint amountIn,
-        address to,
-        uint deadline,
-        address[] memory path,
         address router,
-        uint amountOutMin
-    ) public {
-		IERC20(path[0]).approve(router, amountIn);
-        IRouter(router).swapExactTokensForTokens(amountIn, amountOutMin, path, to, deadline);
+        address _tokenIn,
+        address _tokenOut,
+        uint256 _amount
+    ) private {
+        address[] memory path;
+        path = new address[](2);
+        path[0] = _tokenIn;
+        path[1] = _tokenOut;
+        uint256 deadline = block.timestamp + 300;
+        IUniswapV2Router(router).swapExactTokensForTokens(
+            _amount,
+            1,
+            path,
+            address(this),
+            deadline
+        );
     }
 
-    function getAmount(
-        uint256 amountIn,
-        address[] memory path,
-        address router
-    ) public view returns (uint256[] memory){
-        uint256[] memory amounts = IRouter(router).getAmountsOut(amountIn, path);
-        return amounts;
+    function getAmountOutMin(
+        address router,
+        address _tokenIn,
+        address _tokenOut,
+        uint256 _amount
+    ) public view returns (uint256) {
+        address[] memory path;
+        path = new address[](2);
+        path[0] = _tokenIn;
+        path[1] = _tokenOut;
+        uint256[] memory amountOutMins = IUniswapV2Router(router).getAmountsOut(
+            _amount,
+            path
+        );
+        return amountOutMins[path.length - 1];
+    }
+
+    function estimateDualDexTrade(
+        address _router1,
+        address _router2,
+        address _token1,
+        address _token2,
+        uint256 _amount
+    ) external view returns (uint256) {
+        uint256 amtBack1 = getAmountOutMin(_router1, _token1, _token2, _amount);
+        uint256 amtBack2 = getAmountOutMin(
+            _router2,
+            _token2,
+            _token1,
+            amtBack1
+        );
+        return amtBack2;
+    }
+
+    function dualDexTrade(
+        address _router1,
+        address _router2,
+        address _token1,
+        address _token2,
+        uint256 _amount
+    ) external onlyOwner {
+        uint256 startBalance = IERC20(_token1).balanceOf(address(this));
+        uint256 token2InitialBalance = IERC20(_token2).balanceOf(address(this));
+        swap(_router1, _token1, _token2, _amount);
+        uint256 token2Balance = IERC20(_token2).balanceOf(address(this));
+        uint256 tradeableAmount = token2Balance - token2InitialBalance;
+        swap(_router2, _token2, _token1, tradeableAmount);
+        uint256 endBalance = IERC20(_token1).balanceOf(address(this));
+        // TODO 本番環境ではコメントアウト外す
+        // require(endBalance > startBalance, "Trade Reverted, No Profit Made");
+    }
+
+    function estimateTriDexTrade(
+        address _router1,
+        address _router2,
+        address _router3,
+        address _token1,
+        address _token2,
+        address _token3,
+        uint256 _amount
+    ) external view returns (uint256) {
+        uint256 amtBack1 = getAmountOutMin(_router1, _token1, _token2, _amount);
+        uint256 amtBack2 = getAmountOutMin(
+            _router2,
+            _token2,
+            _token3,
+            amtBack1
+        );
+        uint256 amtBack3 = getAmountOutMin(
+            _router3,
+            _token3,
+            _token1,
+            amtBack2
+        );
+        return amtBack3;
+    }
+
+    function getBalance(address _tokenContractAddress)
+        external
+        view
+        returns (uint256)
+    {
+        uint256 balance = IERC20(_tokenContractAddress).balanceOf(
+            address(this)
+        );
+        return balance;
+    }
+
+    function approve(address token, address spender, uint amount) external onlyOwner {
+        IERC20(token).approve(spender, amount);
+    }
+
+    function recoverEth() external onlyOwner {
+        payable(msg.sender).transfer(address(this).balance);
+    }
+
+    function recoverTokens(address tokenAddress) external onlyOwner {
+        IERC20 token = IERC20(tokenAddress);
+        token.transfer(msg.sender, token.balanceOf(address(this)));
     }
 }
