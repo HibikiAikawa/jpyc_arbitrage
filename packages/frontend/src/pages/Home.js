@@ -1,5 +1,4 @@
 import React, { useEffect, useRef } from "react";
-//
 import { useHistory } from "hooks";
 import {
   LineChart,
@@ -17,9 +16,10 @@ import Layout from "./Layout";
 const Home = (props) => {
   const [data] = useHistory();
 
+
   return (
     <Layout
-      className="bg-slate-100 p-2 display: blockcontainer mx-auto gap-4"
+      className="bg-slate-100 p-5 display: blockcontainer mx-auto gap-4 pb-0"
       contentClassName="p-4 grid grid-cols-3 gap-4"
     >
       <PanelSwapPrice
@@ -41,9 +41,6 @@ const Home = (props) => {
         data={data}
       />
 
-      <div className="bg-white col-span-3 border-2 rounded-lg bg-clip-border border-indigo-500/10">
-        <h2>チャート</h2>
-      </div>
     </Layout>
   );
 };
