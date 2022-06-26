@@ -17,6 +17,14 @@ const ArbitrageContract = new ethers.Contract(
   signer
 );
 
+/**
+ * アービトラージを行う部分
+ * @param {string} _router1 - 交換元トークンを交換先トークンに替えるルーターアドレス
+ * @param {string} _router2 - 交換先トークンを交換元トークンに戻すルーターアドレス
+ * @param {string} _token1 - 交換元トークンのアドレス
+ * @param {string} _token2 - 交換先トークンのアドレス
+ * @param {string} _amount - 交換元トークンの量
+ */
 const dualDexTrade = async (_router1, _router2, _token1, _token2, _amount) => {
   const txCount = await provider.getTransactionCount(address.WALLET);
   const overrides = {
@@ -35,6 +43,10 @@ const dualDexTrade = async (_router1, _router2, _token1, _token2, _amount) => {
   await tx.wait();
 };
 
+/**
+ * コントラクトからウォレットにERC20トークンを戻す関数
+ * @param {string} _tokenAddress - 貰うERC20トークンのアドレス
+ */
 const recoverTokens = async (_tokenAddress) => {
   const txCount = await provider.getTransactionCount(address.WALLET);
   const overrides = {
@@ -46,11 +58,22 @@ const recoverTokens = async (_tokenAddress) => {
   await tx.wait();
 };
 
+/**
+ * コントラクトにあるトークン残高を返す関数
+ * @param {string} _tokenAddress - 調べたいトークンのアドレス
+ * @returns トークン残高
+ */
 const getBalance = async (_tokenAddress) => {
   const balance = await ArbitrageContract.getBalance(_tokenAddress);
   return balance;
 };
 
+/**
+ * ERC20におけるapprove関数と同じ。ルーターからコントラクトアドレスのトークン操作を許可する。
+ * @param {string} token - approveしたいトークンのアドレス
+ * @param {string} spender - routerのコントラクトアドレス
+ * @param {string} amount - approveで許容するトークン量
+ */
 const approve = async (token, spender, amount) => {
   const txCount = await provider.getTransactionCount(address.WALLET);
   const overrides = {
