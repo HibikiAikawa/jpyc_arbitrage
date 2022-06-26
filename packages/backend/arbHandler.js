@@ -12,7 +12,7 @@ const arbitrageContractAbi = arbitrageContractJSON.abi;
 const provider = ethers.getDefaultProvider("matic");
 const signer = new ethers.Wallet(process.env.SEACRET_ADDRESS, provider);
 const ArbitrageContract = new ethers.Contract(
-  address.ARBITRAGE,
+  address.CONTRACT,
   arbitrageContractAbi,
   signer
 );
@@ -42,7 +42,8 @@ const recoverTokens = async (_tokenAddress) => {
     gasLimit: ethers.BigNumber.from(config.gasLimit).toHexString(),
     gasPrice: ethers.BigNumber.from(config.gasPrice).toHexString(),
   };
-  await ArbitrageContract.recoverTokens(_tokenAddress, overrides);
+  const tx = await ArbitrageContract.recoverTokens(_tokenAddress, overrides);
+  await tx.wait();
 };
 
 const getBalance = async (_tokenAddress) => {
