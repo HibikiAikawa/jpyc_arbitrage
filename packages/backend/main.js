@@ -1,28 +1,26 @@
-// .envファイルは適当に作ったアドレスを公開しているので秘密鍵は誰でも見れるようになっています
-// イーサリアムアドレス: 0x23c14ba045f6a05de44b2d66d19c41e0c9fb3092
 require("dotenv").config();
 const fs = require("fs");
-// const Tx = require("ethereumjs-tx").Transaction;
 const ethers = require("ethers");
 const express = require("express");
+const pairContractAbi =
+  require("@uniswap/v2-core/build/IUniswapV2Pair.json").abi;
 // const eventFunc = require("./eventHandler");
 const calFunc = require("./calculate");
+const arbFunc = require("./arbHandler");
 
 const address = JSON.parse(fs.readFileSync("./address.json", "utf8"));
-const pairContractJSON = JSON.parse(
-  fs.readFileSync("./contract/PancakePair.json", "utf8")
-);
-const pairContractAbi = pairContractJSON.abi;
-
-// providerとcontractの作成
-// TODO infra API取得
+const config = JSON.parse(fs.readFileSync("./config.json", "utf8"));
 const provider = ethers.getDefaultProvider("matic");
 const signer = new ethers.Wallet(process.env.SEACRET_ADDRESS, provider);
+
+// USDC/JPYCプールコントラクト(Quickswap)
 const QuickContract = new ethers.Contract(
   address.POOL.QUICKSWAP,
   pairContractAbi,
   signer
 );
+
+// USDC/JPYCプールコントラクト(Sushiswap)
 const SushiContract = new ethers.Contract(
   address.POOL.SUSHISWAP,
   pairContractAbi,
@@ -54,6 +52,18 @@ const onSwapQuick = (
     quickUsdcReserves.toString(),
     quickJpycReserves.toString(),
   ]);
+  const priceDiff = calFunc.rateDiff(
+    quickJpycReserves,
+    quickUsdcReserves,
+    sushiJpycReserves,
+    sushiUsdcReserves,
+    config.tradeQuantity
+  );
+  console.log("QUICK->SUSHI: ", priceDiff["QUICK/SUSHI"]);
+  console.log("SUSHI->QUICK: ", priceDiff["SUSHI/QUICK"]);
+  console.log(
+    "----------------------------------------------------------------"
+  );
 };
 
 const onSwapSushi = (
@@ -75,6 +85,41 @@ const onSwapSushi = (
     sushiUsdcReserves.toString(),
     sushiJpycReserves.toString(),
   ]);
+  const priceDiff = calFunc.rateDiff(
+    quickJpycReserves,
+    quickUsdcReserves,
+    sushiJpycReserves,
+    sushiUsdcReserves,
+    config.tradeQuantity
+  );
+  console.log("QUICK->SUSHI: ", priceDiff["QUICK/SUSHI"]);
+  console.log("SUSHI->QUICK: ", priceDiff["SUSHI/QUICK"]);
+
+  if (priceDiff["QUICK/SUSHI"] > 0) {
+    arbFunc.dualDexTrade(
+      address.ROUTER.QUICKSWAP,
+      address.ROUTER.SUSHI,
+      address.TOKEN.USDC.Contract,
+      address.TOKEN.JPYC.Contract,
+      ethers.BigNumber.from(
+        (config.tradeQuantity * 10 ** address.TOKEN.USDC.Decimals).toString()
+      ).toHexString()
+    );
+  }
+  if (priceDiff["SUSHI/QUICK"] > 0) {
+    arbFunc.dualDexTrade(
+      address.ROUTER.SUSHI,
+      address.ROUTER.QUICKSWAP,
+      address.TOKEN.USDC.Contract,
+      address.TOKEN.JPYC.Contract,
+      ethers.BigNumber.from(
+        (config.tradeQuantity * 10 ** address.TOKEN.USDC.Decimals).toString()
+      ).toHexString()
+    );
+  }
+  console.log(
+    "----------------------------------------------------------------"
+  );
 };
 
 const updateReserves = async () => {
@@ -90,6 +135,18 @@ const updateReserves = async () => {
     sushiUsdcReserves.toString(),
     sushiJpycReserves.toString(),
   ]);
+  const priceDiff = calFunc.rateDiff(
+    quickJpycReserves,
+    quickUsdcReserves,
+    sushiJpycReserves,
+    sushiUsdcReserves,
+    config.tradeQuantity
+  );
+  console.log("QUICK->SUSHI: ", priceDiff["QUICK/SUSHI"]);
+  console.log("SUSHI->QUICK: ", priceDiff["SUSHI/QUICK"]);
+  console.log(
+    "----------------------------------------------------------------"
+  );
 
   QuickContract.on("Swap", onSwapQuick);
   SushiContract.on("Swap", onSwapSushi);
@@ -107,6 +164,9 @@ const updateReserves = async () => {
       sushiUsdcReserves.toString(),
       sushiJpycReserves.toString(),
     ]);
+    console.log(
+      "----------------------------------------------------------------"
+    );
   }, 300000); // 5分
 };
 updateReserves();
