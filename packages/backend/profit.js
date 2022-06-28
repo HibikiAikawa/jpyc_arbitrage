@@ -28,8 +28,8 @@ const testdata = [
     return records;
   };
 
-  exports.add = () => {
-    testdata.push({ date: Math.floor(Date.now() / 1000 ), amount: 9.9, profit: 0 }); //
+  exports.add = (amount, profit, date=Math.floor(Date.now() / 1000 ), ) => {
+    testdata.push({ date, amount, profit}); //
     csvString = stringify(testdata, {
       header: true,
     });

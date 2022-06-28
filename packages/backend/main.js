@@ -123,10 +123,6 @@ app.get("/all", (req, res) => {
   res.send(profitFunc.all());
 });
 
-app.get("/add", (req, res) => {
-  res.send(profitFunc.add());
-});
-
 app.get("/profit", (req, res) => {
   res.send(profitFunc.profit());
 });
