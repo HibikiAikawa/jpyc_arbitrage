@@ -20,7 +20,6 @@ const PricePanel = ({
       <div className="mb-1">
         <p className="text-base">price</p>
         <p className="text-2xl">{price}</p>
-
       </div>
       <div className="mb-0">
         <p className="text-base">Liquitity</p>
