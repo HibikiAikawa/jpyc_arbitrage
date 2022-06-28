@@ -96,26 +96,46 @@ const onSwapSushi = (
   console.log("SUSHI->QUICK: ", priceDiff["SUSHI/QUICK"]);
 
   if (priceDiff["QUICK/SUSHI"] > 0) {
-    arbFunc.dualDexTrade(
-      address.ROUTER.QUICKSWAP,
-      address.ROUTER.SUSHI,
-      address.TOKEN.USDC.Contract,
-      address.TOKEN.JPYC.Contract,
-      ethers.BigNumber.from(
-        (config.tradeQuantity * 10 ** address.TOKEN.USDC.Decimals).toString()
-      ).toHexString()
-    );
+    let bool;
+    try {
+      arbFunc.dualDexTrade(
+        address.ROUTER.QUICKSWAP,
+        address.ROUTER.SUSHI,
+        address.TOKEN.USDC.Contract,
+        address.TOKEN.JPYC.Contract,
+        ethers.BigNumber.from(
+          (config.tradeQuantity * 10 ** address.TOKEN.USDC.Decimals).toString()
+        ).toHexString()
+      );
+      bool = true;
+    } catch (error) {
+      bool = false;
+    }
+    if (bool) {
+      // swap関数
+      console.log("swap");
+    }
   }
   if (priceDiff["SUSHI/QUICK"] > 0) {
-    arbFunc.dualDexTrade(
-      address.ROUTER.SUSHI,
-      address.ROUTER.QUICKSWAP,
-      address.TOKEN.USDC.Contract,
-      address.TOKEN.JPYC.Contract,
-      ethers.BigNumber.from(
-        (config.tradeQuantity * 10 ** address.TOKEN.USDC.Decimals).toString()
-      ).toHexString()
-    );
+    let bool;
+    try {
+      arbFunc.dualDexTrade(
+        address.ROUTER.SUSHI,
+        address.ROUTER.QUICKSWAP,
+        address.TOKEN.USDC.Contract,
+        address.TOKEN.JPYC.Contract,
+        ethers.BigNumber.from(
+          (config.tradeQuantity * 10 ** address.TOKEN.USDC.Decimals).toString()
+        ).toHexString()
+      );
+      bool = true;
+    } catch (error) {
+      bool = false;
+    }
+    if (bool) {
+      // swap関数
+      console.log("swap");
+    }
   }
   console.log(
     "----------------------------------------------------------------"
