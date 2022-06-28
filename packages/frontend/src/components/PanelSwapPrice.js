@@ -24,7 +24,7 @@ const PricePanel = ({
       <div className="mb-0">
         <p className="text-base">Liquitity</p>
         <p className="text-2xl">
-          <i class="fa-solid fa-dollar-sign"></i>
+          <i className="fa-solid fa-dollar-sign"></i>
           {liquitity}
         </p>
       </div>
