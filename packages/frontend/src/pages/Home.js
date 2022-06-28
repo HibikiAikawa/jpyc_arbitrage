@@ -5,6 +5,7 @@ import {
   PanelSwapPrice,
   PanelSwapRate,
   PanelTradeHistory,
+  TradingChart,
 } from "components";
 import Layout from "./Layout";
 
@@ -14,7 +15,7 @@ import Layout from "./Layout";
  * @returns
  */
 const Home = (props) => {
-  const [data] = useHistory();
+  //const [data] = useHistory();
 
 
   return (
@@ -36,10 +37,15 @@ const Home = (props) => {
       />
 
       <PanelTradeHistory className="bg-white col-span-1 border-2 rounded-lg bg-clip-border border-indigo-500/10" />
+
       <LineChart
         className="bg-white col-span-2 border-2 rounded-lg bg-clip-border border-indigo-500/10"
-        data={data}
+        /*data={data}*/
       />
+
+      <div className="bg-white col-span-3 border-2 rounded-lg bg-clip-border border-indigo-500/10 p-4">
+        <TradingChart />
+      </div>
 
     </Layout>
   );
