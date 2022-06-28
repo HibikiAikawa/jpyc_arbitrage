@@ -66,13 +66,6 @@ const testdata = [
           backgroundColor: "#542535",
           fill: false,
         },
-        {
-          data: week,
-          label: "dex2 jpyc-usdc",
-          borderColor: "#3e95cd",
-          backgroundColor: "#7bb6dd",
-          fill: false,
-        },
       ],
     };
   };
