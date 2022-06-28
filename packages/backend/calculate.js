@@ -1,8 +1,7 @@
 const fs = require("fs");
 
 const address = JSON.parse(fs.readFileSync("./address.json", "utf8"));
-const amountInJpyc = 1300; // 取引量
-const amountInUsdc = 10; // 取引量
+const config = JSON.parse(fs.readFileSync("./config.json", "utf8"));
 
 /**
  * BigNumberをfloat型に計算しなおす
@@ -54,35 +53,35 @@ const rate = (
   const quickOutUsdc = getRate(
     strToFloat(address.TOKEN.JPYC.Decimals, quickJpycReserves.toString()),
     strToFloat(address.TOKEN.USDC.Decimals, quickUsdcReserves.toString()),
-    amountInJpyc
+    config.amountInJpyc
   );
   // amountInUsdc売って、買えるquickOutJpyc
   const quickOutJpyc = getRate(
     strToFloat(address.TOKEN.USDC.Decimals, quickUsdcReserves.toString()),
     strToFloat(address.TOKEN.JPYC.Decimals, quickJpycReserves.toString()),
-    amountInUsdc
+    config.amountInUsdc
   );
   // amountInJpyc売って、買えるsushiOutUsdc
   const sushiOutUsdc = getRate(
     strToFloat(address.TOKEN.JPYC.Decimals, sushiJpycReserves.toString()),
     strToFloat(address.TOKEN.USDC.Decimals, sushiUsdcReserves.toString()),
-    amountInJpyc
+    config.amountInJpyc
   );
   // amountInUsdc売って、買えるsushikOutJpyc
   const sushiOutJpyc = getRate(
     strToFloat(address.TOKEN.USDC.Decimals, sushiUsdcReserves.toString()),
     strToFloat(address.TOKEN.JPYC.Decimals, sushiJpycReserves.toString()),
-    amountInUsdc
+    config.amountInUsdc
   );
 
   return {
     QUICKSWAP: {
-      sell: amountInJpyc / quickOutUsdc,
-      buy: quickOutJpyc / amountInUsdc,
+      sell: config.amountInJpyc / quickOutUsdc,
+      buy: quickOutJpyc / config.amountInUsdc,
     },
     SUSHISWAP: {
-      sell: amountInJpyc / sushiOutUsdc,
-      buy: sushiOutJpyc / amountInUsdc,
+      sell: config.amountInJpyc / sushiOutUsdc,
+      buy: sushiOutJpyc / config.amountInUsdc,
     },
   };
 };

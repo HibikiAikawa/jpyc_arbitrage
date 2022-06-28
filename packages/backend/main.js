@@ -1,5 +1,5 @@
 // .envファイルは適当に作ったアドレスを公開しているので秘密鍵は誰でも見れるようになっています
-// イーサリアムアドレス: 0x49baaf328089899af4a65b5bc5e2739ae55bc455
+// イーサリアムアドレス: 0x23c14ba045f6a05de44b2d66d19c41e0c9fb3092
 require("dotenv").config();
 const fs = require("fs");
 // const Tx = require("ethereumjs-tx").Transaction;
