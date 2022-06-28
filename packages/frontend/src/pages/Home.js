@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import { useHistory } from "hooks";
 import {
   LineChart,
@@ -16,7 +16,6 @@ import Layout from "./Layout";
  */
 const Home = (props) => {
   //const [data] = useHistory();
-
 
   return (
     <Layout
@@ -46,7 +45,6 @@ const Home = (props) => {
       <div className="bg-white col-span-3 border-2 rounded-lg bg-clip-border border-indigo-500/10 p-4">
         <TradingChart />
       </div>
-
     </Layout>
   );
 };
