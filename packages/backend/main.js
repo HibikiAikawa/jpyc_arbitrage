@@ -5,7 +5,7 @@ const fs = require("fs");
 // const Tx = require("ethereumjs-tx").Transaction;
 const ethers = require("ethers");
 const express = require("express");
-const profitFunc = require("./profit")
+const profitFunc = require("./profit");
 // const eventFunc = require("./eventHandler");
 const calFunc = require("./calculate");
 
@@ -35,6 +35,10 @@ let quickJpycReserves;
 let quickUsdcReserves;
 let sushiJpycReserves;
 let sushiUsdcReserves;
+
+// profit.csvの内容と同期させる
+let profitCache = [];
+profitCache = profitFunc.all();
 
 const onSwapQuick = (
   senderAddress,
@@ -115,16 +119,7 @@ updateReserves();
 // REST API
 const app = express();
 const server = app.listen(3002, () => {
-  profitFunc.init();
   console.log("Node.js is listening to PORT:", server.address().port);
-});
-
-app.get("/all", (req, res) => {
-  res.send(profitFunc.all());
-});
-
-app.get("/profit", (req, res) => {
-  res.send(profitFunc.profit());
 });
 
 app.get("/rate", (req, res) => {
@@ -136,4 +131,23 @@ app.get("/rate", (req, res) => {
       sushiUsdcReserves
     )
   );
+});
+
+app.get("/profit", (req, res) => {
+  res.send(profitFunc.profit());
+});
+
+// デバッグ用API:以下は本番までに消します
+const add7Times = () => {
+  profitFunc.add(profitCache, 10, 0);
+  profitFunc.add(profitCache, 10.2, 0.2);
+  profitFunc.add(profitCache, 10.3, 0.3);
+  profitFunc.add(profitCache, 10.3, 0.3);
+  profitFunc.add(profitCache, 10, 0);
+  profitFunc.add(profitCache, 9.8, -0.2);
+  profitFunc.add(profitCache, 9.9, -0.1);
+};
+
+app.get("/add/testdata", (req, res) => {
+  res.send(add7Times());
 });
