@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React from "react";
 
 /**
  *
@@ -8,7 +8,7 @@ import React, { useEffect, useRef } from "react";
 const Layout = (props) => {
   return (
     <div className={props.className}>
-      <h1>JPYC Arbitrage Bot</h1>
+      <h1 className="font-bold">JPYC Arbitrage Bot</h1>
       <small>polygon hackhason!!</small>
       <div className={props.contentClassName}> {props.children}</div>
     </div>

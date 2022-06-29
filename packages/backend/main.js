@@ -1,10 +1,11 @@
 // .envファイルは適当に作ったアドレスを公開しているので秘密鍵は誰でも見れるようになっています
-// イーサリアムアドレス: 0x49baaf328089899af4a65b5bc5e2739ae55bc455
+// イーサリアムアドレス: 0x23c14ba045f6a05de44b2d66d19c41e0c9fb3092
 require("dotenv").config();
 const fs = require("fs");
 // const Tx = require("ethereumjs-tx").Transaction;
 const ethers = require("ethers");
 const express = require("express");
+const profitFunc = require("./profit");
 // const eventFunc = require("./eventHandler");
 const calFunc = require("./calculate");
 
@@ -34,6 +35,10 @@ let quickJpycReserves;
 let quickUsdcReserves;
 let sushiJpycReserves;
 let sushiUsdcReserves;
+
+// profit.csvの内容と同期させる
+let profitCache = [];
+profitCache = profitFunc.all();
 
 const onSwapQuick = (
   senderAddress,
@@ -126,4 +131,23 @@ app.get("/rate", (req, res) => {
       sushiUsdcReserves
     )
   );
+});
+
+app.get("/profit", (req, res) => {
+  res.send(profitFunc.profit());
+});
+
+// デバッグ用API:以下は本番までに消します
+const add7Times = () => {
+  profitFunc.add(profitCache, 10, 0);
+  profitFunc.add(profitCache, 10.2, 0.2);
+  profitFunc.add(profitCache, 10.3, 0.3);
+  profitFunc.add(profitCache, 10.3, 0.3);
+  profitFunc.add(profitCache, 10, 0);
+  profitFunc.add(profitCache, 9.8, -0.2);
+  profitFunc.add(profitCache, 9.9, -0.1);
+};
+
+app.get("/add/testdata", (req, res) => {
+  res.send(add7Times());
 });
