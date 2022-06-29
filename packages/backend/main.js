@@ -40,7 +40,11 @@ let sushiUsdcReserves;
 let profitCache = [];
 profitCache = profitFunc.all();
 
-const onSwapQuick = (
+// 現在アービトラージをやっているかを判断する変数
+// 取引中に新しいイベントをリッスンしてアービトラージ機会が発生すると二重にトレードをしてしまいエラーが起こる
+let nowArb = false;
+
+const onSwapQuick = async (
   senderAddress,
   amount0In,
   amount1In,
@@ -69,10 +73,11 @@ const onSwapQuick = (
   );
 
   // 裁定機会があるならアービトラージ
-  if (priceDiff["QUICK/SUSHI"] > 0) {
+  if (priceDiff["QUICK/SUSHI"] > 0 && !nowArb) {
+    nowArb = true;
     let bool;
     try {
-      arbFunc.dualDexTrade(
+      await arbFunc.dualDexTrade(
         address.ROUTER.QUICKSWAP,
         address.ROUTER.SUSHISWAP,
         address.TOKEN.USDC.Address,
@@ -91,6 +96,7 @@ const onSwapQuick = (
     } else {
       console.log("swap is failed")
     }
+    nowArb = false;
   }
   console.log("QUICK->SUSHI: ", priceDiff["QUICK/SUSHI"]);
   console.log("SUSHI->QUICK: ", priceDiff["SUSHI/QUICK"]);
@@ -99,7 +105,7 @@ const onSwapQuick = (
   );
 };
 
-const onSwapSushi = (
+const onSwapSushi = async (
   senderAddress,
   amount0In,
   amount1In,
@@ -130,10 +136,11 @@ const onSwapSushi = (
   console.log("SUSHI->QUICK: ", priceDiff["SUSHI/QUICK"]);
   
   // 裁定機会があるならアービトラージ
-  if (priceDiff["SUSHI/QUICK"] > 0) {
+  if (priceDiff["SUSHI/QUICK"] > 0 && !nowArb) {
+    nowArb = true;
     let bool;
     try {
-      arbFunc.dualDexTrade(
+      await arbFunc.dualDexTrade(
         address.ROUTER.SUSHISWAP,
         address.ROUTER.QUICKSWAP,
         address.TOKEN.USDC.Address,
@@ -152,7 +159,7 @@ const onSwapSushi = (
     } else {
       console.log("swap is failed")
     }
-    
+    nowArb = false;
   }
   console.log(
     "----------------------------------------------------------------"
