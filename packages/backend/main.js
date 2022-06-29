@@ -217,6 +217,15 @@ updateReserves();
 
 // REST API
 const app = express();
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*")
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTION"
+  )
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization")
+  next()
+})
 const server = app.listen(3002, () => {
   console.log("Node.js is listening to PORT:", server.address().port);
 });
