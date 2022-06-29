@@ -4,6 +4,7 @@ const ethers = require("ethers");
 const express = require("express");
 const pairContractAbi =
   require("@uniswap/v2-core/build/IUniswapV2Pair.json").abi;
+const profitFunc = require("./profit");
 // const eventFunc = require("./eventHandler");
 const calFunc = require("./calculate");
 const arbFunc = require("./arbHandler");
@@ -34,6 +35,10 @@ let quickJpycReserves;
 let quickUsdcReserves;
 let sushiJpycReserves;
 let sushiUsdcReserves;
+
+// profit.csvの内容と同期させる
+let profitCache = [];
+profitCache = profitFunc.all();
 
 const onSwapQuick = (
   senderAddress,
@@ -218,4 +223,23 @@ app.get("/rate", (req, res) => {
       sushiUsdcReserves
     )
   );
+});
+
+app.get("/profit", (req, res) => {
+  res.send(profitFunc.profit());
+});
+
+// デバッグ用API:以下は本番までに消します
+const add7Times = () => {
+  profitFunc.add(profitCache, 10, 0);
+  profitFunc.add(profitCache, 10.2, 0.2);
+  profitFunc.add(profitCache, 10.3, 0.3);
+  profitFunc.add(profitCache, 10.3, 0.3);
+  profitFunc.add(profitCache, 10, 0);
+  profitFunc.add(profitCache, 9.8, -0.2);
+  profitFunc.add(profitCache, 9.9, -0.1);
+};
+
+app.get("/add/testdata", (req, res) => {
+  res.send(add7Times());
 });
