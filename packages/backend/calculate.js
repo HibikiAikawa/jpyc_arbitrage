@@ -102,27 +102,29 @@ const rateDiff = (
   sushiUsdcReserves,
   amountIn
 ) => {
-  // amountInUsdc売って、買えるquickOutJpyc
+  // amountIn(USDC) -> quickOutJPYC(JPYC) -> sushiOutUsdc(USDC)で裁定機会を探る
+  // USDC -> QUICKSWAP -> JPYC
   const quickOutJpyc = getRate(
     strToFloat(address.TOKEN.USDC.Decimals, quickUsdcReserves.toString()),
     strToFloat(address.TOKEN.JPYC.Decimals, quickJpycReserves.toString()),
     amountIn
   );
-  // amountInJpyc売って、買えるsushiOutUsdc
+  // JPYC -> SUSHISWAP -> USDC
   const sushiOutUsdc = getRate(
     strToFloat(address.TOKEN.JPYC.Decimals, sushiJpycReserves.toString()),
     strToFloat(address.TOKEN.USDC.Decimals, sushiUsdcReserves.toString()),
     quickOutJpyc
   );
 
-  // amountInUsdc売って、買えるsushikOutJpyc
+  // amountIn(USDC) -> sushiOutJPYC(JPYC) -> quickOutUsdc(USDC)で裁定機会を探る
+  // USDC -> SUSHISWAP -> JPYC
   const sushiOutJpyc = getRate(
     strToFloat(address.TOKEN.USDC.Decimals, sushiUsdcReserves.toString()),
     strToFloat(address.TOKEN.JPYC.Decimals, sushiJpycReserves.toString()),
     amountIn
   );
 
-  // amountInJpyc売って、買えるquickOutUsdc
+  // JPYC -> QUICKSWAP -> USDC
   const quickOutUsdc = getRate(
     strToFloat(address.TOKEN.JPYC.Decimals, quickJpycReserves.toString()),
     strToFloat(address.TOKEN.USDC.Decimals, quickUsdcReserves.toString()),

@@ -10,6 +10,8 @@ const arbFunc = require("./arbHandler");
 
 const address = JSON.parse(fs.readFileSync("./address.json", "utf8"));
 const config = JSON.parse(fs.readFileSync("./config.json", "utf8"));
+
+// TODO infraAPIの取得
 const provider = ethers.getDefaultProvider("matic");
 const signer = new ethers.Wallet(process.env.SEACRET_ADDRESS, provider);
 
@@ -52,6 +54,7 @@ const onSwapQuick = (
     quickUsdcReserves.toString(),
     quickJpycReserves.toString(),
   ]);
+  // 裁定機会のチェック
   const priceDiff = calFunc.rateDiff(
     quickJpycReserves,
     quickUsdcReserves,
@@ -59,6 +62,31 @@ const onSwapQuick = (
     sushiUsdcReserves,
     config.tradeQuantity
   );
+
+  // 裁定機会があるならアービトラージ
+  if (priceDiff["QUICK/SUSHI"] > 0) {
+    let bool;
+    try {
+      arbFunc.dualDexTrade(
+        address.ROUTER.QUICKSWAP,
+        address.ROUTER.SUSHISWAP,
+        address.TOKEN.USDC.Address,
+        address.TOKEN.JPYC.Address,
+        ethers.BigNumber.from(
+          (config.tradeQuantity * 10 ** address.TOKEN.USDC.Decimals).toString()
+        ).toHexString()
+      );
+      bool = true;
+    } catch (error) {
+      bool = false;
+    }
+    if (bool) {
+      // TODO 実行結果をcsvに追加する処理を入れる
+      console.log("swap is successed");
+    } else {
+      console.log("swap is failed")
+    }
+  }
   console.log("QUICK->SUSHI: ", priceDiff["QUICK/SUSHI"]);
   console.log("SUSHI->QUICK: ", priceDiff["SUSHI/QUICK"]);
   console.log(
@@ -85,6 +113,7 @@ const onSwapSushi = (
     sushiUsdcReserves.toString(),
     sushiJpycReserves.toString(),
   ]);
+  // 裁定機会のチェック
   const priceDiff = calFunc.rateDiff(
     quickJpycReserves,
     quickUsdcReserves,
@@ -94,36 +123,16 @@ const onSwapSushi = (
   );
   console.log("QUICK->SUSHI: ", priceDiff["QUICK/SUSHI"]);
   console.log("SUSHI->QUICK: ", priceDiff["SUSHI/QUICK"]);
-
-  if (priceDiff["QUICK/SUSHI"] > 0) {
-    let bool;
-    try {
-      arbFunc.dualDexTrade(
-        address.ROUTER.QUICKSWAP,
-        address.ROUTER.SUSHI,
-        address.TOKEN.USDC.Contract,
-        address.TOKEN.JPYC.Contract,
-        ethers.BigNumber.from(
-          (config.tradeQuantity * 10 ** address.TOKEN.USDC.Decimals).toString()
-        ).toHexString()
-      );
-      bool = true;
-    } catch (error) {
-      bool = false;
-    }
-    if (bool) {
-      // swap関数
-      console.log("swap");
-    }
-  }
+  
+  // 裁定機会があるならアービトラージ
   if (priceDiff["SUSHI/QUICK"] > 0) {
     let bool;
     try {
       arbFunc.dualDexTrade(
-        address.ROUTER.SUSHI,
+        address.ROUTER.SUSHISWAP,
         address.ROUTER.QUICKSWAP,
-        address.TOKEN.USDC.Contract,
-        address.TOKEN.JPYC.Contract,
+        address.TOKEN.USDC.Address,
+        address.TOKEN.JPYC.Address,
         ethers.BigNumber.from(
           (config.tradeQuantity * 10 ** address.TOKEN.USDC.Decimals).toString()
         ).toHexString()
@@ -133,9 +142,12 @@ const onSwapSushi = (
       bool = false;
     }
     if (bool) {
-      // swap関数
-      console.log("swap");
+      // TODO 実行結果をcsvに追加する処理を入れる
+      console.log("swap is successed");
+    } else {
+      console.log("swap is failed")
     }
+    
   }
   console.log(
     "----------------------------------------------------------------"
