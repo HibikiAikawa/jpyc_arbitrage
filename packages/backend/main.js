@@ -192,8 +192,8 @@ const updateReserves = async () => {
     "----------------------------------------------------------------"
   );
 
-  QuickContract.on("Swap", onSwapQuick);
-  SushiContract.on("Swap", onSwapSushi);
+  // QuickContract.on("Swap", onSwapQuick);
+  // SushiContract.on("Swap", onSwapSushi);
 
   setInterval(async () => {
     const quickLatestReserves = await QuickContract.getReserves();
@@ -235,6 +235,10 @@ app.get("/rate", (req, res) => {
 
 app.get("/profit", (req, res) => {
   res.send(profitFunc.profit());
+});
+
+app.get("/result/:n", (req, res) => {
+  res.send(profitFunc.result(req.params.n));
 });
 
 // デバッグ用API:以下は本番までに消します
