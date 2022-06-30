@@ -36,6 +36,9 @@ let quickUsdcReserves;
 let sushiJpycReserves;
 let sushiUsdcReserves;
 
+// アビトラ前のコントラクトのトークン量
+let beforeUsdc;
+let beforeJpyc;
 // profit.csvの内容と同期させる
 let profitCache = [];
 profitCache = profitFunc.all();
@@ -91,10 +94,15 @@ const onSwapQuick = async (
       bool = false;
     }
     if (bool) {
-      // TODO 実行結果をcsvに追加する処理を入れる
       console.log("swap is successed");
+      const nowUsdc = await calFunc.getBalance(
+        address.TOKEN.USDC.Decimals,
+        address.TOKEN.USDC.Address
+      );
+      profitFunc.add(profitFunc, config.tradeQuantity, nowUsdc - beforeUsdc);
+      beforeUsdc = nowUsdc;
     } else {
-      console.log("swap is failed")
+      console.log("swap is failed");
     }
     nowArb = false;
   }
@@ -134,7 +142,7 @@ const onSwapSushi = async (
   );
   console.log("QUICK->SUSHI: ", priceDiff["QUICK/SUSHI"]);
   console.log("SUSHI->QUICK: ", priceDiff["SUSHI/QUICK"]);
-  
+
   // 裁定機会があるならアービトラージ
   if (priceDiff["SUSHI/QUICK"] > 0 && !nowArb) {
     nowArb = true;
@@ -154,10 +162,15 @@ const onSwapSushi = async (
       bool = false;
     }
     if (bool) {
-      // TODO 実行結果をcsvに追加する処理を入れる
       console.log("swap is successed");
+      const nowUsdc = await calFunc.getBalance(
+        address.TOKEN.USDC.Decimals,
+        address.TOKEN.USDC.Address
+      );
+      profitFunc.add(profitFunc, config.tradeQuantity, nowUsdc - beforeUsdc);
+      beforeUsdc = nowUsdc;
     } else {
-      console.log("swap is failed")
+      console.log("swap is failed");
     }
     nowArb = false;
   }
@@ -167,6 +180,7 @@ const onSwapSushi = async (
 };
 
 const updateReserves = async () => {
+  // プールのステーク量を取得
   const quickReserves = await QuickContract.getReserves();
   const sushiReserves = await SushiContract.getReserves();
   [quickUsdcReserves, quickJpycReserves] = quickReserves;
@@ -179,6 +193,7 @@ const updateReserves = async () => {
     sushiUsdcReserves.toString(),
     sushiJpycReserves.toString(),
   ]);
+  // DEX間の価格差の取得
   const priceDiff = calFunc.rateDiff(
     quickJpycReserves,
     quickUsdcReserves,
@@ -188,6 +203,17 @@ const updateReserves = async () => {
   );
   console.log("QUICK->SUSHI: ", priceDiff["QUICK/SUSHI"]);
   console.log("SUSHI->QUICK: ", priceDiff["SUSHI/QUICK"]);
+  // コントラクトの保有しているトークン量
+  beforeUsdc = await calFunc.getBalance(
+    address.TOKEN.USDC.Decimals,
+    address.TOKEN.USDC.Address
+  );
+  beforeJpyc = await calFunc.getBalance(
+    address.TOKEN.JPYC.Decimals,
+    address.TOKEN.JPYC.Address
+  );
+  console.log("USDC Balance:", beforeUsdc);
+  console.log("JPYC Balance:", beforeJpyc);
   console.log(
     "----------------------------------------------------------------"
   );
@@ -218,14 +244,14 @@ updateReserves();
 // REST API
 const app = express();
 app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*")
+  res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader(
     "Access-Control-Allow-Methods",
     "GET, POST, PUT, PATCH, DELETE, OPTION"
-  )
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization")
-  next()
-})
+  );
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  next();
+});
 const server = app.listen(3002, () => {
   console.log("Node.js is listening to PORT:", server.address().port);
 });

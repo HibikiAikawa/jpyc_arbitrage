@@ -1,5 +1,7 @@
 const fs = require("fs");
 
+const arbFunc = require("./arbHandler");
+
 const address = JSON.parse(fs.readFileSync("./address.json", "utf8"));
 const config = JSON.parse(fs.readFileSync("./config.json", "utf8"));
 
@@ -137,5 +139,16 @@ const rateDiff = (
   };
 };
 
+const getBalance = async (decimals, tokenAddress) => {
+  const quantity = await arbFunc.getBalance(tokenAddress);
+  const balance = strToFloat(decimals, quantity.toString());
+  if (isNaN(balance)) {
+    return 0.0;
+  }
+  return balance;
+};
+
+exports.getBalance = getBalance;
+exports.strToFloat = strToFloat;
 exports.rateDiff = rateDiff;
 exports.rate = rate;
