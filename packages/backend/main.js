@@ -222,14 +222,15 @@ const server = app.listen(3002, () => {
 });
 
 app.get("/rate", (req, res) => {
-  res.send(
-    calFunc.rate(
+  res.send({
+    status: true,
+    body: calFunc.rate(
       quickJpycReserves,
       quickUsdcReserves,
       sushiJpycReserves,
       sushiUsdcReserves
-    )
-  );
+    ),
+  });
 });
 
 app.get("/profit", (req, res) => {

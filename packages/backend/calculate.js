@@ -74,14 +74,46 @@ const rate = (
     config.amountInUsdc
   );
 
+  const quickSellJpycRate = config.amountInJpyc / quickOutUsdc;
+  const quickBuyJpycRate = quickOutJpyc / config.amountInUsdc;
+  const quickAverageRate = (quickSellJpycRate + quickBuyJpycRate) / 2;
+
+  const sushiSellJpycRate = config.amountInJpyc / sushiOutUsdc;
+  const sushiBuyJpycRate = sushiOutJpyc / config.amountInUsdc;
+  const sushiAverageRate = (sushiSellJpycRate + sushiBuyJpycRate) / 2;
+
   return {
     QUICKSWAP: {
-      sell: config.amountInJpyc / quickOutUsdc,
-      buy: quickOutJpyc / config.amountInUsdc,
+      sell: quickSellJpycRate,
+      buy: quickBuyJpycRate,
+      jpycReserves: strToFloat(
+        address.TOKEN.JPYC.Decimals,
+        quickJpycReserves.toString()
+      ),
+      usdcReserves: strToFloat(
+        address.TOKEN.USDC.Decimals,
+        quickUsdcReserves.toString()
+      ),
+      liquidity:
+        strToFloat(address.TOKEN.JPYC.Decimals, quickJpycReserves.toString()) /
+          sushiAverageRate +
+        strToFloat(address.TOKEN.USDC.Decimals, quickUsdcReserves.toString()),
     },
     SUSHISWAP: {
-      sell: config.amountInJpyc / sushiOutUsdc,
-      buy: sushiOutJpyc / config.amountInUsdc,
+      sell: sushiSellJpycRate,
+      buy: sushiBuyJpycRate,
+      jpycReserves: strToFloat(
+        address.TOKEN.JPYC.Decimals,
+        sushiJpycReserves.toString()
+      ),
+      usdcReserves: strToFloat(
+        address.TOKEN.USDC.Decimals,
+        sushiUsdcReserves.toString()
+      ),
+      liquidity:
+        strToFloat(address.TOKEN.JPYC.Decimals, sushiJpycReserves.toString()) /
+          quickAverageRate +
+        strToFloat(address.TOKEN.USDC.Decimals, sushiUsdcReserves.toString()),
     },
   };
 };
