@@ -1,4 +1,3 @@
-import NoWorkResult from "postcss/lib/no-work-result";
 import React from "react";
 
 const example = [
