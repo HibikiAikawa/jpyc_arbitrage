@@ -1,29 +1,29 @@
-// .envファイルは適当に作ったアドレスを公開しているので秘密鍵は誰でも見れるようになっています
-// イーサリアムアドレス: 0x23c14ba045f6a05de44b2d66d19c41e0c9fb3092
 require("dotenv").config();
 const fs = require("fs");
-// const Tx = require("ethereumjs-tx").Transaction;
 const ethers = require("ethers");
 const express = require("express");
+const pairContractAbi =
+  require("@uniswap/v2-core/build/IUniswapV2Pair.json").abi;
 const profitFunc = require("./profit");
 // const eventFunc = require("./eventHandler");
 const calFunc = require("./calculate");
+const arbFunc = require("./arbHandler");
 
 const address = JSON.parse(fs.readFileSync("./address.json", "utf8"));
-const pairContractJSON = JSON.parse(
-  fs.readFileSync("./contract/PancakePair.json", "utf8")
-);
-const pairContractAbi = pairContractJSON.abi;
+const config = JSON.parse(fs.readFileSync("./config.json", "utf8"));
 
-// providerとcontractの作成
-// TODO infra API取得
+// TODO infraAPIの取得
 const provider = ethers.getDefaultProvider("matic");
 const signer = new ethers.Wallet(process.env.SEACRET_ADDRESS, provider);
+
+// USDC/JPYCプールコントラクト(Quickswap)
 const QuickContract = new ethers.Contract(
   address.POOL.QUICKSWAP,
   pairContractAbi,
   signer
 );
+
+// USDC/JPYCプールコントラクト(Sushiswap)
 const SushiContract = new ethers.Contract(
   address.POOL.SUSHISWAP,
   pairContractAbi,
@@ -40,7 +40,11 @@ let sushiUsdcReserves;
 let profitCache = [];
 profitCache = profitFunc.all();
 
-const onSwapQuick = (
+// 現在アービトラージをやっているかを判断する変数
+// 取引中に新しいイベントをリッスンしてアービトラージ機会が発生すると二重にトレードをしてしまいエラーが起こる
+let nowArb = false;
+
+const onSwapQuick = async (
   senderAddress,
   amount0In,
   amount1In,
@@ -59,9 +63,49 @@ const onSwapQuick = (
     quickUsdcReserves.toString(),
     quickJpycReserves.toString(),
   ]);
+  // 裁定機会のチェック
+  const priceDiff = calFunc.rateDiff(
+    quickJpycReserves,
+    quickUsdcReserves,
+    sushiJpycReserves,
+    sushiUsdcReserves,
+    config.tradeQuantity
+  );
+
+  // 裁定機会があるならアービトラージ
+  if (priceDiff["QUICK/SUSHI"] > 0 && !nowArb) {
+    nowArb = true;
+    let bool;
+    try {
+      await arbFunc.dualDexTrade(
+        address.ROUTER.QUICKSWAP,
+        address.ROUTER.SUSHISWAP,
+        address.TOKEN.USDC.Address,
+        address.TOKEN.JPYC.Address,
+        ethers.BigNumber.from(
+          (config.tradeQuantity * 10 ** address.TOKEN.USDC.Decimals).toString()
+        ).toHexString()
+      );
+      bool = true;
+    } catch (error) {
+      bool = false;
+    }
+    if (bool) {
+      // TODO 実行結果をcsvに追加する処理を入れる
+      console.log("swap is successed");
+    } else {
+      console.log("swap is failed")
+    }
+    nowArb = false;
+  }
+  console.log("QUICK->SUSHI: ", priceDiff["QUICK/SUSHI"]);
+  console.log("SUSHI->QUICK: ", priceDiff["SUSHI/QUICK"]);
+  console.log(
+    "----------------------------------------------------------------"
+  );
 };
 
-const onSwapSushi = (
+const onSwapSushi = async (
   senderAddress,
   amount0In,
   amount1In,
@@ -80,6 +124,46 @@ const onSwapSushi = (
     sushiUsdcReserves.toString(),
     sushiJpycReserves.toString(),
   ]);
+  // 裁定機会のチェック
+  const priceDiff = calFunc.rateDiff(
+    quickJpycReserves,
+    quickUsdcReserves,
+    sushiJpycReserves,
+    sushiUsdcReserves,
+    config.tradeQuantity
+  );
+  console.log("QUICK->SUSHI: ", priceDiff["QUICK/SUSHI"]);
+  console.log("SUSHI->QUICK: ", priceDiff["SUSHI/QUICK"]);
+  
+  // 裁定機会があるならアービトラージ
+  if (priceDiff["SUSHI/QUICK"] > 0 && !nowArb) {
+    nowArb = true;
+    let bool;
+    try {
+      await arbFunc.dualDexTrade(
+        address.ROUTER.SUSHISWAP,
+        address.ROUTER.QUICKSWAP,
+        address.TOKEN.USDC.Address,
+        address.TOKEN.JPYC.Address,
+        ethers.BigNumber.from(
+          (config.tradeQuantity * 10 ** address.TOKEN.USDC.Decimals).toString()
+        ).toHexString()
+      );
+      bool = true;
+    } catch (error) {
+      bool = false;
+    }
+    if (bool) {
+      // TODO 実行結果をcsvに追加する処理を入れる
+      console.log("swap is successed");
+    } else {
+      console.log("swap is failed")
+    }
+    nowArb = false;
+  }
+  console.log(
+    "----------------------------------------------------------------"
+  );
 };
 
 const updateReserves = async () => {
@@ -95,6 +179,18 @@ const updateReserves = async () => {
     sushiUsdcReserves.toString(),
     sushiJpycReserves.toString(),
   ]);
+  const priceDiff = calFunc.rateDiff(
+    quickJpycReserves,
+    quickUsdcReserves,
+    sushiJpycReserves,
+    sushiUsdcReserves,
+    config.tradeQuantity
+  );
+  console.log("QUICK->SUSHI: ", priceDiff["QUICK/SUSHI"]);
+  console.log("SUSHI->QUICK: ", priceDiff["SUSHI/QUICK"]);
+  console.log(
+    "----------------------------------------------------------------"
+  );
 
   QuickContract.on("Swap", onSwapQuick);
   SushiContract.on("Swap", onSwapSushi);
@@ -112,6 +208,9 @@ const updateReserves = async () => {
       sushiUsdcReserves.toString(),
       sushiJpycReserves.toString(),
     ]);
+    console.log(
+      "----------------------------------------------------------------"
+    );
   }, 300000); // 5分
 };
 updateReserves();

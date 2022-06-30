@@ -2,5 +2,6 @@
     "gasPrice":"60000000000",
     "gasLimit":"2000000",
     "amountInJpyc":1300,
-    "amountInUsdc":10
+    "amountInUsdc":10,
+    "tradeQuantity": 0.05
 }

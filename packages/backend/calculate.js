@@ -86,4 +86,56 @@ const rate = (
   };
 };
 
+/**
+ * 交換トークン量とプールのステーク量を考慮したアービトラージの利益額の計算
+ * @param {ethers.ethers.BigNumber} quickJpycReserves - QuickSwapプールのJPYC量
+ * @param {ethers.ethers.BigNumber} quickUsdcReserves - QuickSwapプールのUSDC量
+ * @param {ethers.ethers.BigNumber} sushiJpycReserves - SushiSwapプールのJPYC量
+ * @param {ethers.ethers.BigNumber} sushiUsdcReserves - SushiSwapプールのUSDC量
+ * @param {float} amountIn - トークン量
+ * @returns - オブジェクト
+ */
+const rateDiff = (
+  quickJpycReserves,
+  quickUsdcReserves,
+  sushiJpycReserves,
+  sushiUsdcReserves,
+  amountIn
+) => {
+  // amountIn(USDC) -> quickOutJPYC(JPYC) -> sushiOutUsdc(USDC)で裁定機会を探る
+  // USDC -> QUICKSWAP -> JPYC
+  const quickOutJpyc = getRate(
+    strToFloat(address.TOKEN.USDC.Decimals, quickUsdcReserves.toString()),
+    strToFloat(address.TOKEN.JPYC.Decimals, quickJpycReserves.toString()),
+    amountIn
+  );
+  // JPYC -> SUSHISWAP -> USDC
+  const sushiOutUsdc = getRate(
+    strToFloat(address.TOKEN.JPYC.Decimals, sushiJpycReserves.toString()),
+    strToFloat(address.TOKEN.USDC.Decimals, sushiUsdcReserves.toString()),
+    quickOutJpyc
+  );
+
+  // amountIn(USDC) -> sushiOutJPYC(JPYC) -> quickOutUsdc(USDC)で裁定機会を探る
+  // USDC -> SUSHISWAP -> JPYC
+  const sushiOutJpyc = getRate(
+    strToFloat(address.TOKEN.USDC.Decimals, sushiUsdcReserves.toString()),
+    strToFloat(address.TOKEN.JPYC.Decimals, sushiJpycReserves.toString()),
+    amountIn
+  );
+
+  // JPYC -> QUICKSWAP -> USDC
+  const quickOutUsdc = getRate(
+    strToFloat(address.TOKEN.JPYC.Decimals, quickJpycReserves.toString()),
+    strToFloat(address.TOKEN.USDC.Decimals, quickUsdcReserves.toString()),
+    sushiOutJpyc
+  );
+
+  return {
+    "QUICK/SUSHI": sushiOutUsdc - amountIn,
+    "SUSHI/QUICK": quickOutUsdc - amountIn,
+  };
+};
+
+exports.rateDiff = rateDiff;
 exports.rate = rate;
