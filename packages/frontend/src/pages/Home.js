@@ -1,13 +1,7 @@
 import React from "react";
-import { useHistory } from "hooks";
-import {
-  LineChart,
-  PanelSwapPrice,
-  PanelSwapRate,
-  PanelTradeHistory,
-  TradingChart,
-} from "components";
+import { PanelSwapPrice, PanelSwapRate, TradingChart } from "components";
 import Layout from "./Layout";
+import ProfitContents from "./ProfitContents";
 
 /**
  *
@@ -15,8 +9,6 @@ import Layout from "./Layout";
  * @returns
  */
 const Home = (props) => {
-  //const [data] = useHistory();
-
   return (
     <Layout
       className="bg-slate-100 p-5 display: blockcontainer mx-auto gap-4 pb-0"
@@ -35,11 +27,10 @@ const Home = (props) => {
         label="Swap Rate"
       />
 
-      <PanelTradeHistory className="bg-white col-span-1 border-2 rounded-lg bg-clip-border border-indigo-500/10" />
-
-      <LineChart
-        className="bg-white col-span-2 border-2 rounded-lg bg-clip-border border-indigo-500/10"
-        /*data={data}*/
+      <ProfitContents
+        className="col-span-3 grid grid-cols-3 gap-4"
+        historyClassName="bg-white col-span-1 border-2 rounded-lg bg-clip-border border-indigo-500/10"
+        chartClassName="bg-white col-span-2 border-2 rounded-lg bg-clip-border border-indigo-500/10"
       />
 
       <div className="bg-white col-span-3 border-2 rounded-lg bg-clip-border border-indigo-500/10 p-4">
