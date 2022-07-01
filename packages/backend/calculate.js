@@ -171,6 +171,12 @@ const rateDiff = (
   };
 };
 
+/**
+ * 現在の指定したトークン量を調べる。量はwei建てでなくether建て
+ * @param {int} decimals - トークンのDecimals
+ * @param {string} tokenAddress - トークンアドレス
+ * @returns  ether建でのトークン量
+ */
 const getBalance = async (decimals, tokenAddress) => {
   const quantity = await arbFunc.getBalance(tokenAddress);
   const balance = strToFloat(decimals, quantity.toString());
