@@ -99,7 +99,7 @@ const onSwapQuick = async (
         address.TOKEN.USDC.Decimals,
         address.TOKEN.USDC.Address
       );
-      profitFunc.add(profitFunc, config.tradeQuantity, nowUsdc - beforeUsdc);
+      profitFunc.add(profitCache, config.tradeQuantity, nowUsdc - beforeUsdc);
       beforeUsdc = nowUsdc;
     } else {
       console.log("swap is failed");
@@ -167,7 +167,7 @@ const onSwapSushi = async (
         address.TOKEN.USDC.Decimals,
         address.TOKEN.USDC.Address
       );
-      profitFunc.add(profitFunc, config.tradeQuantity, nowUsdc - beforeUsdc);
+      profitFunc.add(profitCache, config.tradeQuantity, nowUsdc - beforeUsdc);
       beforeUsdc = nowUsdc;
     } else {
       console.log("swap is failed");
