@@ -95,12 +95,16 @@ const onSwapQuick = async (
     }
     if (bool) {
       console.log("swap is successed");
-      const nowUsdc = await calFunc.getBalance(
-        address.TOKEN.USDC.Decimals,
-        address.TOKEN.USDC.Address
-      );
-      profitFunc.add(profitCache, config.tradeQuantity, nowUsdc - beforeUsdc);
-      beforeUsdc = nowUsdc;
+      try {
+        const nowUsdc = await calFunc.getBalance(
+          address.TOKEN.USDC.Decimals,
+          address.TOKEN.USDC.Address
+        );
+        profitFunc.writeRow(profitCache, config.tradeQuantity, nowUsdc - beforeUsdc);
+        beforeUsdc = nowUsdc;
+      } catch (error) {
+        console.log("write out error.");
+      }
     } else {
       console.log("swap is failed");
     }
@@ -163,12 +167,16 @@ const onSwapSushi = async (
     }
     if (bool) {
       console.log("swap is successed");
-      const nowUsdc = await calFunc.getBalance(
-        address.TOKEN.USDC.Decimals,
-        address.TOKEN.USDC.Address
-      );
-      profitFunc.add(profitCache, config.tradeQuantity, nowUsdc - beforeUsdc);
-      beforeUsdc = nowUsdc;
+      try {
+        const nowUsdc = await calFunc.getBalance(
+          address.TOKEN.USDC.Decimals,
+          address.TOKEN.USDC.Address
+        );
+        profitFunc.writeRow(profitCache, config.tradeQuantity, nowUsdc - beforeUsdc);
+        beforeUsdc = nowUsdc;
+      } catch (error) {
+        console.log("write out error.");
+      }
     } else {
       console.log("swap is failed");
     }
@@ -274,13 +282,13 @@ app.get("/profit", (req, res) => {
 
 // デバッグ用API:以下は本番までに消します
 const add7Times = () => {
-  profitFunc.add(profitCache, 10, 0);
-  profitFunc.add(profitCache, 10.2, 0.2);
-  profitFunc.add(profitCache, 10.3, 0.3);
-  profitFunc.add(profitCache, 10.3, 0.3);
-  profitFunc.add(profitCache, 10, 0);
-  profitFunc.add(profitCache, 9.8, -0.2);
-  profitFunc.add(profitCache, 9.9, -0.1);
+  profitFunc.writeRow(profitCache, 10, 0);
+  profitFunc.writeRow(profitCache, 10.2, 0.2);
+  profitFunc.writeRow(profitCache, 10.3, 0.3);
+  profitFunc.writeRow(profitCache, 10.3, 0.3);
+  profitFunc.writeRow(profitCache, 10, 0);
+  profitFunc.writeRow(profitCache, 9.8, -0.2);
+  profitFunc.writeRow(profitCache, 9.9, -0.1);
 };
 
 app.get("/add/testdata", (req, res) => {
