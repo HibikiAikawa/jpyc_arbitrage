@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.5;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -62,8 +62,8 @@ contract Arbitrage is Ownable {
      * @notice 2つのdexを介してアビーとラージを行う
      * @param {address} _router1 - 交換元⇒交換先トークンに変換するルーターアドレス
      * @param {address} _router2 - 交換先⇒交換元トークンに変換するルーターアドレス
-     * @param {address} _tokenIn - 交換元トークンアドレス
-     * @param {address} _tokenOut - 交換先トークンアドレス
+     * @param {address} _token1 - 交換元トークンアドレス
+     * @param {address} _token2 - 交換先トークンアドレス
      * @param {uint256} _amount - 交換元トークンの交換したいトークン量
      * @dev require関数でアービトラージで利益が出ているかを担保する
      */
@@ -81,8 +81,7 @@ contract Arbitrage is Ownable {
         uint256 tradeableAmount = token2Balance - token2InitialBalance;
         swap(_router2, _token2, _token1, tradeableAmount);
         uint256 endBalance = IERC20(_token1).balanceOf(address(this));
-        // TODO 本番環境ではコメントアウト外す
-        // require(endBalance > startBalance, "Trade Reverted, No Profit Made");
+        require(endBalance > startBalance, "Trade Reverted, No Profit Made");
     }
 
     /**
