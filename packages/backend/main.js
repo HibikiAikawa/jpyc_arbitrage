@@ -280,6 +280,10 @@ app.get("/profit", (req, res) => {
   res.send(profitFunc.profit());
 });
 
+app.get("/result/:n", (req, res) => {
+  res.send(profitFunc.result(req.params.n));
+});
+
 // デバッグ用API:以下は本番までに消します
 const add7Times = () => {
   profitFunc.writeRow(profitCache, 10, 0);
