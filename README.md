@@ -3,8 +3,11 @@ JPYC Arbitrage
 
 # プロジェクトについて
 Polygonネットワーク上のDEXであるQuickswapとSushiswapで裁定機会を算出しアービトラージを行う。取引結果はcsvに保存されており、フロントエンドから直近の取引履歴・収益推移・各DEXでのスワップレート等が確認できるようになっている。
+
+フロントエンド画像
 <img src="frontend.png">
 
+バックエンド画像
 <img src="backend.png">
 
 # 解決しようとしている課題
