@@ -12,6 +12,10 @@ JPYCと法定通貨JPYとの価格の平衡化
 # 使用した技術
 使用言語: node.js React solidity
 
+# polygonscan
+https://polygonscan.com/address/0x4dC624B08f2Af43f04Ed2D78c05c2bCDACaDd70a
+
+
 # 直面した課題
 アービトラージを行う上で他のノードよりも早くトランザクションを通す必要がある
 - 通信回数を減らす(<b>解決済</b>)
