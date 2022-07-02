@@ -1,29 +1,29 @@
-// .envファイルは適当に作ったアドレスを公開しているので秘密鍵は誰でも見れるようになっています
-// イーサリアムアドレス: 0x23c14ba045f6a05de44b2d66d19c41e0c9fb3092
 require("dotenv").config();
 const fs = require("fs");
-// const Tx = require("ethereumjs-tx").Transaction;
 const ethers = require("ethers");
 const express = require("express");
+const pairContractAbi =
+  require("@uniswap/v2-core/build/IUniswapV2Pair.json").abi;
 const profitFunc = require("./profit");
 // const eventFunc = require("./eventHandler");
 const calFunc = require("./calculate");
+const arbFunc = require("./arbHandler");
 
 const address = JSON.parse(fs.readFileSync("./address.json", "utf8"));
-const pairContractJSON = JSON.parse(
-  fs.readFileSync("./contract/PancakePair.json", "utf8")
-);
-const pairContractAbi = pairContractJSON.abi;
+const config = JSON.parse(fs.readFileSync("./config.json", "utf8"));
 
-// providerとcontractの作成
-// TODO infra API取得
+// TODO infraAPIの取得
 const provider = ethers.getDefaultProvider("matic");
 const signer = new ethers.Wallet(process.env.SEACRET_ADDRESS, provider);
+
+// USDC/JPYCプールコントラクト(Quickswap)
 const QuickContract = new ethers.Contract(
   address.POOL.QUICKSWAP,
   pairContractAbi,
   signer
 );
+
+// USDC/JPYCプールコントラクト(Sushiswap)
 const SushiContract = new ethers.Contract(
   address.POOL.SUSHISWAP,
   pairContractAbi,
@@ -36,11 +36,18 @@ let quickUsdcReserves;
 let sushiJpycReserves;
 let sushiUsdcReserves;
 
+// アビトラ前のコントラクトのトークン量
+let beforeUsdc;
+let beforeJpyc;
 // profit.csvの内容と同期させる
 let profitCache = [];
 profitCache = profitFunc.all();
 
-const onSwapQuick = (
+// 現在アービトラージをやっているかを判断する変数
+// 取引中に新しいイベントをリッスンしてアービトラージ機会が発生すると二重にトレードをしてしまいエラーが起こる
+let nowArb = false;
+
+const onSwapQuick = async (
   senderAddress,
   amount0In,
   amount1In,
@@ -59,9 +66,58 @@ const onSwapQuick = (
     quickUsdcReserves.toString(),
     quickJpycReserves.toString(),
   ]);
+  // 裁定機会のチェック
+  const priceDiff = calFunc.rateDiff(
+    quickJpycReserves,
+    quickUsdcReserves,
+    sushiJpycReserves,
+    sushiUsdcReserves,
+    config.tradeQuantity
+  );
+
+  // 裁定機会があるならアービトラージ
+  if (priceDiff["QUICK/SUSHI"] > 0 && !nowArb) {
+    nowArb = true;
+    let bool;
+    try {
+      await arbFunc.dualDexTrade(
+        address.ROUTER.QUICKSWAP,
+        address.ROUTER.SUSHISWAP,
+        address.TOKEN.USDC.Address,
+        address.TOKEN.JPYC.Address,
+        ethers.BigNumber.from(
+          (config.tradeQuantity * 10 ** address.TOKEN.USDC.Decimals).toString()
+        ).toHexString()
+      );
+      bool = true;
+    } catch (error) {
+      bool = false;
+    }
+    if (bool) {
+      console.log("swap is successed");
+      try {
+        const nowUsdc = await calFunc.getBalance(
+          address.TOKEN.USDC.Decimals,
+          address.TOKEN.USDC.Address
+        );
+        profitFunc.writeRow(profitCache, config.tradeQuantity, nowUsdc - beforeUsdc);
+        beforeUsdc = nowUsdc;
+      } catch (error) {
+        console.log("write out error.");
+      }
+    } else {
+      console.log("swap is failed");
+    }
+    nowArb = false;
+  }
+  console.log("QUICK->SUSHI: ", priceDiff["QUICK/SUSHI"]);
+  console.log("SUSHI->QUICK: ", priceDiff["SUSHI/QUICK"]);
+  console.log(
+    "----------------------------------------------------------------"
+  );
 };
 
-const onSwapSushi = (
+const onSwapSushi = async (
   senderAddress,
   amount0In,
   amount1In,
@@ -80,9 +136,59 @@ const onSwapSushi = (
     sushiUsdcReserves.toString(),
     sushiJpycReserves.toString(),
   ]);
+  // 裁定機会のチェック
+  const priceDiff = calFunc.rateDiff(
+    quickJpycReserves,
+    quickUsdcReserves,
+    sushiJpycReserves,
+    sushiUsdcReserves,
+    config.tradeQuantity
+  );
+  console.log("QUICK->SUSHI: ", priceDiff["QUICK/SUSHI"]);
+  console.log("SUSHI->QUICK: ", priceDiff["SUSHI/QUICK"]);
+
+  // 裁定機会があるならアービトラージ
+  if (priceDiff["SUSHI/QUICK"] > 0 && !nowArb) {
+    nowArb = true;
+    let bool;
+    try {
+      await arbFunc.dualDexTrade(
+        address.ROUTER.SUSHISWAP,
+        address.ROUTER.QUICKSWAP,
+        address.TOKEN.USDC.Address,
+        address.TOKEN.JPYC.Address,
+        ethers.BigNumber.from(
+          (config.tradeQuantity * 10 ** address.TOKEN.USDC.Decimals).toString()
+        ).toHexString()
+      );
+      bool = true;
+    } catch (error) {
+      bool = false;
+    }
+    if (bool) {
+      console.log("swap is successed");
+      try {
+        const nowUsdc = await calFunc.getBalance(
+          address.TOKEN.USDC.Decimals,
+          address.TOKEN.USDC.Address
+        );
+        profitFunc.writeRow(profitCache, config.tradeQuantity, nowUsdc - beforeUsdc);
+        beforeUsdc = nowUsdc;
+      } catch (error) {
+        console.log("write out error.");
+      }
+    } else {
+      console.log("swap is failed");
+    }
+    nowArb = false;
+  }
+  console.log(
+    "----------------------------------------------------------------"
+  );
 };
 
 const updateReserves = async () => {
+  // プールのステーク量を取得
   const quickReserves = await QuickContract.getReserves();
   const sushiReserves = await SushiContract.getReserves();
   [quickUsdcReserves, quickJpycReserves] = quickReserves;
@@ -95,6 +201,30 @@ const updateReserves = async () => {
     sushiUsdcReserves.toString(),
     sushiJpycReserves.toString(),
   ]);
+  // DEX間の価格差の取得
+  const priceDiff = calFunc.rateDiff(
+    quickJpycReserves,
+    quickUsdcReserves,
+    sushiJpycReserves,
+    sushiUsdcReserves,
+    config.tradeQuantity
+  );
+  console.log("QUICK->SUSHI: ", priceDiff["QUICK/SUSHI"]);
+  console.log("SUSHI->QUICK: ", priceDiff["SUSHI/QUICK"]);
+  // コントラクトの保有しているトークン量
+  beforeUsdc = await calFunc.getBalance(
+    address.TOKEN.USDC.Decimals,
+    address.TOKEN.USDC.Address
+  );
+  beforeJpyc = await calFunc.getBalance(
+    address.TOKEN.JPYC.Decimals,
+    address.TOKEN.JPYC.Address
+  );
+  console.log("USDC Balance:", beforeUsdc);
+  console.log("JPYC Balance:", beforeJpyc);
+  console.log(
+    "----------------------------------------------------------------"
+  );
 
   QuickContract.on("Swap", onSwapQuick);
   SushiContract.on("Swap", onSwapSushi);
@@ -112,25 +242,38 @@ const updateReserves = async () => {
       sushiUsdcReserves.toString(),
       sushiJpycReserves.toString(),
     ]);
+    console.log(
+      "----------------------------------------------------------------"
+    );
   }, 300000); // 5分
 };
 updateReserves();
 
 // REST API
 const app = express();
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTION"
+  );
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  next();
+});
 const server = app.listen(3002, () => {
   console.log("Node.js is listening to PORT:", server.address().port);
 });
 
 app.get("/rate", (req, res) => {
-  res.send(
-    calFunc.rate(
+  res.send({
+    status: true,
+    body: calFunc.rate(
       quickJpycReserves,
       quickUsdcReserves,
       sushiJpycReserves,
       sushiUsdcReserves
-    )
-  );
+    ),
+  });
 });
 
 app.get("/profit", (req, res) => {
@@ -139,13 +282,13 @@ app.get("/profit", (req, res) => {
 
 // デバッグ用API:以下は本番までに消します
 const add7Times = () => {
-  profitFunc.add(profitCache, 10, 0);
-  profitFunc.add(profitCache, 10.2, 0.2);
-  profitFunc.add(profitCache, 10.3, 0.3);
-  profitFunc.add(profitCache, 10.3, 0.3);
-  profitFunc.add(profitCache, 10, 0);
-  profitFunc.add(profitCache, 9.8, -0.2);
-  profitFunc.add(profitCache, 9.9, -0.1);
+  profitFunc.writeRow(profitCache, 10, 0);
+  profitFunc.writeRow(profitCache, 10.2, 0.2);
+  profitFunc.writeRow(profitCache, 10.3, 0.3);
+  profitFunc.writeRow(profitCache, 10.3, 0.3);
+  profitFunc.writeRow(profitCache, 10, 0);
+  profitFunc.writeRow(profitCache, 9.8, -0.2);
+  profitFunc.writeRow(profitCache, 9.9, -0.1);
 };
 
 app.get("/add/testdata", (req, res) => {

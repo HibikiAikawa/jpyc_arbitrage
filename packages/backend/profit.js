@@ -3,13 +3,15 @@ const { stringify } = require("csv-stringify/sync");
 const { parse } = require("csv-parse/sync");
 
 exports.all = () => {
-  try { // profit.csvがあれば読み込む
+  try {
+    // profit.csvがあれば読み込む
     const data = fs.readFileSync("profit.csv");
     const records = parse(data, {
       columns: true,
     });
     return records;
-  } catch (e) { // なければ空のprofit.csvを作成する
+  } catch (e) {
+    // なければ空のprofit.csvを作成する
     fs.writeFileSync(
       "profit.csv",
       stringify([], {
@@ -21,7 +23,12 @@ exports.all = () => {
 };
 
 // main.jsで使うときはcache = profitCacheを代入する
-exports.add = (cache, amount, profit, date = Math.floor(Date.now() / 1000)) => {
+exports.writeRow = (
+  cache,
+  amount,
+  profit,
+  date = Math.floor(Date.now() / 1000)
+) => {
   cache.push({ date, amount, profit }); //
   const csvString = stringify(cache, {
     header: true,
