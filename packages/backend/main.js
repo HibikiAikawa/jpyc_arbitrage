@@ -64,7 +64,7 @@ const amountCheck= (
 }
 
 // 裁定機会のチェック
-const priceDiff = () => calFunc.rateDiff(
+const getPriceDiff = () => calFunc.rateDiff(
   quickJpycReserves,
   quickUsdcReserves,
   sushiJpycReserves,
@@ -123,7 +123,7 @@ const onSwapQuick = async (
   printFunc.Rates(globalRates.SUSHISWAP.buy, rates.SUSHISWAP.buy, "SushiSwap");
   globalRates = rates;
   // 裁定機会のチェック
-  priceDiff();
+  const priceDiff = getPriceDiff();
 
   // 裁定機会があるならアービトラージ
   arbitrage(priceDiff["QUICK/SUSHI"])
@@ -157,7 +157,7 @@ const onSwapSushi = async (
   printFunc.Rates(globalRates.QUICKSWAP.buy, rates.QUICKSWAP.buy, "QuickSwap");
   printFunc.Rates(globalRates.SUSHISWAP.buy, rates.SUSHISWAP.buy, "SushiSwap");
   // 裁定機会のチェック
-  priceDiff()
+  const priceDiff = getPriceDiff()
   console.log("estimated profits | QUICK->SUSHI:", priceDiff["QUICK/SUSHI"]);
   console.log("estimated profits | SUSHI->QUICK:", priceDiff["SUSHI/QUICK"]);
 
@@ -184,6 +184,9 @@ const updateReserves = async () => {
   console.log("(first)");
   console.log("buy rate          | QuickSwap:", rates.QUICKSWAP.buy);
   console.log("buy rate          | SushiSwap:", rates.SUSHISWAP.buy);
+
+  const priceDiff = getPriceDiff();
+
   // DEX間の価格差の取得
   console.log("estimated profits | QUICK->SUSHI:", priceDiff["QUICK/SUSHI"]);
   console.log("estimated profits | SUSHI->QUICK:", priceDiff["SUSHI/QUICK"]);
