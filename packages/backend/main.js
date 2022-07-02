@@ -36,6 +36,9 @@ let quickUsdcReserves;
 let sushiJpycReserves;
 let sushiUsdcReserves;
 
+// アビトラ前のコントラクトのトークン量
+let beforeUsdc;
+let beforeJpyc;
 // profit.csvの内容と同期させる
 let profitCache = [];
 profitCache = profitFunc.all();
@@ -150,6 +153,7 @@ const onSwapSushi = async (
 };
 
 const updateReserves = async () => {
+  // プールのステーク量を取得
   const quickReserves = await QuickContract.getReserves();
   const sushiReserves = await SushiContract.getReserves();
   [quickUsdcReserves, quickJpycReserves] = quickReserves;
@@ -162,6 +166,7 @@ const updateReserves = async () => {
     sushiUsdcReserves.toString(),
     sushiJpycReserves.toString(),
   ]);
+  // DEX間の価格差の取得
   const priceDiff = calFunc.rateDiff(
     quickJpycReserves,
     quickUsdcReserves,
@@ -171,6 +176,17 @@ const updateReserves = async () => {
   );
   console.log("QUICK->SUSHI: ", priceDiff["QUICK/SUSHI"]);
   console.log("SUSHI->QUICK: ", priceDiff["SUSHI/QUICK"]);
+  // コントラクトの保有しているトークン量
+  beforeUsdc = await calFunc.getBalance(
+    address.TOKEN.USDC.Decimals,
+    address.TOKEN.USDC.Address
+  );
+  beforeJpyc = await calFunc.getBalance(
+    address.TOKEN.JPYC.Decimals,
+    address.TOKEN.JPYC.Address
+  );
+  console.log("USDC Balance:", beforeUsdc);
+  console.log("JPYC Balance:", beforeJpyc);
   console.log(
     "----------------------------------------------------------------"
   );
@@ -200,34 +216,48 @@ updateReserves();
 
 // REST API
 const app = express();
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTION"
+  );
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  next();
+});
 const server = app.listen(3002, () => {
   console.log("Node.js is listening to PORT:", server.address().port);
 });
 
 app.get("/rate", (req, res) => {
-  res.send(
-    calFunc.rate(
+  res.send({
+    status: true,
+    body: calFunc.rate(
       quickJpycReserves,
       quickUsdcReserves,
       sushiJpycReserves,
       sushiUsdcReserves
-    )
-  );
+    ),
+  });
 });
 
 app.get("/profit", (req, res) => {
   res.send(profitFunc.profit());
 });
 
+app.get("/result/:n", (req, res) => {
+  res.send(profitFunc.result(req.params.n));
+});
+
 // デバッグ用API:以下は本番までに消します
 const add7Times = () => {
-  profitFunc.add(profitCache, 10, 0);
-  profitFunc.add(profitCache, 10.2, 0.2);
-  profitFunc.add(profitCache, 10.3, 0.3);
-  profitFunc.add(profitCache, 10.3, 0.3);
-  profitFunc.add(profitCache, 10, 0);
-  profitFunc.add(profitCache, 9.8, -0.2);
-  profitFunc.add(profitCache, 9.9, -0.1);
+  profitFunc.writeRow(profitCache, 10, 0);
+  profitFunc.writeRow(profitCache, 10.2, 0.2);
+  profitFunc.writeRow(profitCache, 10.3, 0.3);
+  profitFunc.writeRow(profitCache, 10.3, 0.3);
+  profitFunc.writeRow(profitCache, 10, 0);
+  profitFunc.writeRow(profitCache, 9.8, -0.2);
+  profitFunc.writeRow(profitCache, 9.9, -0.1);
 };
 
 app.get("/add/testdata", (req, res) => {

@@ -20,13 +20,16 @@ const example = [
 const formatDate = (date) => {
   let _data = new Date(date);
   return (
-    _data.getFullYear() + "-" + _data.getDate() + "-" + _data.getMonth() + " "
+    _data.getFullYear() + "-" + _data.getMonth() + "-" + _data.getDate() + " "
   );
 };
 
 //
 const ListItem = (props) => {
   const value = props.value;
+
+  let number = Number(value.date * 1000);
+  let d = new Date(number);
   return (
     // Wrong! There is no need to specify the key here:
     <li className="p-3">
@@ -38,13 +41,14 @@ const ListItem = (props) => {
         </div>
         <div className="col-span-3 row-span-2">
           <p className="">Amount: {value.amount}</p>
-          <p className="text-sm">{formatDate(value.date)}</p>
+          <p className="text-sm">{formatDate(d)}</p>
+          <p className="text-sm">{}</p>
         </div>
         <div className="col-span-4 row-span-2">
           <p className="text-center inline-block align-middle">
-            {value.result >= 0 ? "+" : "-"}
-            {value.result}
-            {value.unit}
+            {value.profit >= 0 ? "+" : "-"}
+            {value.profit}
+            USDT
           </p>
         </div>
       </div>
@@ -63,14 +67,18 @@ const PanelTradeHistory = ({
   label = "取引履歴",
   data = example,
 }) => {
+  // console.log("data");
+  // console.log(data);
   //
   return (
     <div className={`p-2 ${className}`}>
       <p className="text-xl">{label}</p>
       <ul>
-        {example.map((e, i) => (
-          <ListItem key={i.toString()} value={e} />
-        ))}
+        {data ? (
+          data.map((e, i) => <ListItem key={i.toString()} value={e} />)
+        ) : (
+          <></>
+        )}
       </ul>
     </div>
   );

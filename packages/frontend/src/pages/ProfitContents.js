@@ -8,11 +8,11 @@ import { useHistory } from "hooks";
  * @returns
  */
 const ProfitContents = (props) => {
-  const [{ profit, loading, error }] = useHistory();
+  const [{ profit, result, loading, error }] = useHistory();
 
   return (
     <div className={props.className}>
-      <PanelTradeHistory className={props.historyClassName} data={profit} />
+      <PanelTradeHistory className={props.historyClassName} data={result} />
 
       <LineChart className={props.chartClassName} data={profit} />
     </div>
