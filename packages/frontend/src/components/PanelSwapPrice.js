@@ -38,7 +38,7 @@ const PricePanel = ({
       </div>
       <div className="mb-1">
         <p className="text-base">price</p>
-        <p className="text-2xl">{posts?.QUICKSWAP?.sell}</p>
+        <p className="text-2xl">{label.QUICKSWAP? posts?.QUICKSWAP?.sell : posts?.SUSHISWAP?.sell}</p>
       </div>
       <div className="mb-0">
         <p className="text-base">Liquitity</p>
