@@ -69,3 +69,12 @@ exports.profit = () => {
     ],
   };
 };
+
+exports.result = (n) => {
+  const data = fs.readFileSync("profit.csv"); // todo:別のCSV
+  const records = parse(data, {
+    columns: true,
+  });
+
+  return records.slice(-n).reverse();
+};
