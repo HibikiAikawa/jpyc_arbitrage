@@ -13,9 +13,9 @@ const useHistory = () => {
     const _timer = setInterval(async () => {
       try {
         console.debug(`fetch data http://${server}:${port}/profit`);
-        let data = await axios.get(`http://${server}:${port}/profit`);
+        let _fetch = await axios.get(`http://${server}:${port}/profit`);
         setError(false);
-        setProfit(data);
+        setProfit(_fetch.data);
       } catch (error) {
         setError(true);
         setProfit(null);
