@@ -30,7 +30,7 @@ import React, { useState } from "react";
           <ul className={listCss}>
             <li className={textStyle}>
               <i className="fa-solid fa-magnifying-glass pr-3"></i>
-              <a href="https://polygonscan.com/">Polygon scan</a></li>
+              <a href="https://polygonscan.com/address/0x4dC624B08f2Af43f04Ed2D78c05c2bCDACaDd70a" target="_blank" rel="noopener noreferrer">Polygon scan</a></li>
             <li className={textStyle}>
               <i className="fa-solid fa-book pr-3"></i>
               <a href="">Docs</a></li>
