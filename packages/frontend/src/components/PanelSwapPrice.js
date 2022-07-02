@@ -1,4 +1,5 @@
 import React,{useState,useEffect} from "react";
+import {server,port} from "define";
 import axios from "axios";
 
 /**
@@ -13,24 +14,48 @@ const PricePanel = ({
   id = "",
   className = "",
   label = "xyz swap",
-  price = "〇〇〇 USDC/JPYC",
-  liquitity = 0,
+  price = "",
+  liquidity = 0,
 
 }) => {
 
-  
-  const [posts, setPosts] = useState(null)
+  const [posts, setProfit] = useState(null)
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const timerId = setInterval(() =>{
-      axios.get('http://localhost:3002/rate')
-    .then(res => {
-        setPosts(res)
-    }).catch(e=>{})} , 5000)
-      return () => clearInterval(timerId)
-  }, [])
+    const timerId = setInterval(async () =>{
+      try{
+      let _res = await axios.get(`http://${server}:${port}/rate`);
+      setError(false);
+      setProfit(_res.data);
+    } catch (error) {
+      setError(true);
+      setProfit(null);
+    }
 
+    setLoading(false)
+  } , 5000);
+      return () => clearInterval(timerId);
+  }, []);
 
+  if (loading === true){
+    price="loading..."
+    liquidity = "loading..."
+  }else if(error === true){
+    price="error"
+    liquidity = "loading..."
+  }else{
+    if (label === "QUICKSWAP"){
+      price= Math.round(posts.body.QUICKSWAP.sell * 100)/100
+      liquidity = Math.round(posts.body.QUICKSWAP.liquidity * 100)/100
+    }else{
+      price= Math.round(posts.body.SUSHISWAP.sell * 100)/100
+      liquidity = Math.round(posts.body.SUSHISWAP.liquidity * 100)/100
+    }
+  }
+
+  console.log(posts)
   return (
     <div id={id} className={`p-3 ${className}`}>
       <div className="mb-0">
@@ -38,13 +63,13 @@ const PricePanel = ({
       </div>
       <div className="mb-1">
         <p className="text-base">price</p>
-        <p className="text-2xl">{label.QUICKSWAP? posts?.QUICKSWAP?.sell : posts?.SUSHISWAP?.sell}</p>
+        <p className="text-2xl">{price}</p>
       </div>
       <div className="mb-0">
-        <p className="text-base">Liquitity</p>
+        <p className="text-base">liquidity</p>
         <p className="text-2xl">
           <i className="fa-solid fa-dollar-sign"></i>
-          {liquitity}
+          {liquidity}
         </p>
       </div>
     </div>
