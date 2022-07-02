@@ -8,6 +8,7 @@ const profitFunc = require("./profit");
 // const eventFunc = require("./eventHandler");
 const calFunc = require("./calculate");
 const arbFunc = require("./arbHandler");
+const printFunc = require("./printer");
 
 const address = JSON.parse(fs.readFileSync("./address.json", "utf8"));
 const config = JSON.parse(fs.readFileSync("./config.json", "utf8"));
@@ -47,6 +48,8 @@ profitCache = profitFunc.all();
 // 取引中に新しいイベントをリッスンしてアービトラージ機会が発生すると二重にトレードをしてしまいエラーが起こる
 let nowArb = false;
 
+// rateの増減を判定するためのキャッシュ
+let globalRates;
 
 const amountCheck= (
   amount0In,
@@ -55,9 +58,9 @@ const amountCheck= (
   amount1Out
   ) =>{
     if (amount0In.isZero()) console.log("usdc(out):", amount0Out.toString());
-    if (amount0Out.isZero()) console.log("usdc(in): ", amount0In.toString());
+    if (amount0Out.isZero()) console.log("usdc(in) :", amount0In.toString());
     if (amount1In.isZero()) console.log("jpyc(out):", amount1Out.toString());
-    if (amount1Out.isZero()) console.log("jpyc(in): ", amount1In.toString());
+    if (amount1Out.isZero()) console.log("jpyc(in) :", amount1In.toString());
 }
 
 // 裁定機会のチェック
@@ -105,21 +108,27 @@ const onSwapQuick = async (
   amount1Out,
   to
 ) => {
-  console.log("(Quick) from:", senderAddress, "to:", to);
+  console.log("(event QuickSwap)");
+  console.log("from:", senderAddress, "to:", to);
   amountCheck(amount0In,amount1In,amount0Out,amount1Out)
   quickUsdcReserves = quickUsdcReserves.add(amount0In).sub(amount0Out);
   quickJpycReserves = quickJpycReserves.add(amount1In).sub(amount1Out);
-  console.log("(Quick) event: ", [
-    quickUsdcReserves.toString(),
-    quickJpycReserves.toString(),
-  ]);
-
+  const rates = calFunc.rate(
+    quickJpycReserves,
+    quickUsdcReserves,
+    sushiJpycReserves,
+    sushiUsdcReserves
+  );
+  printFunc.Rates(globalRates.QUICKSWAP.buy, rates.QUICKSWAP.buy, "QuickSwap");
+  printFunc.Rates(globalRates.SUSHISWAP.buy, rates.SUSHISWAP.buy, "SushiSwap");
+  globalRates = rates;
   // 裁定機会のチェック
-  priceDiff()
-  console.log("QUICK->SUSHI: ", priceDiff["QUICK/SUSHI"]);
-  console.log("SUSHI->QUICK: ", priceDiff["SUSHI/QUICK"]);
+  priceDiff();
+
   // 裁定機会があるならアービトラージ
   arbitrage(priceDiff["QUICK/SUSHI"])
+  console.log("estimated profits | QUICK->SUSHI:", priceDiff["QUICK/SUSHI"]);
+  console.log("estimated profits | SUSHI->QUICK:", priceDiff["SUSHI/QUICK"]);
   console.log(
     "----------------------------------------------------------------"
   );
@@ -133,18 +142,25 @@ const onSwapSushi = async (
   amount1Out,
   to
 ) => {
-  console.log("(Sushi) from:", senderAddress, "to:", to);
+  console.log("(event SushiSwap)");
+  console.log("from:", senderAddress, "to:", to);
   amountCheck(amount0In,amount1In,amount0Out,amount1Out)
   sushiUsdcReserves = sushiUsdcReserves.add(amount0In).sub(amount0Out);
   sushiJpycReserves = sushiJpycReserves.add(amount1In).sub(amount1Out);
-  console.log("(Sushi) event: ", [
-    sushiUsdcReserves.toString(),
-    sushiJpycReserves.toString(),
-  ]);
+  const rates = calFunc.rate(
+    quickJpycReserves,
+    quickUsdcReserves,
+    sushiJpycReserves,
+    sushiUsdcReserves
+  );
+
+  printFunc.Rates(globalRates.QUICKSWAP.buy, rates.QUICKSWAP.buy, "QuickSwap");
+  printFunc.Rates(globalRates.SUSHISWAP.buy, rates.SUSHISWAP.buy, "SushiSwap");
   // 裁定機会のチェック
   priceDiff()
-  console.log("QUICK->SUSHI: ", priceDiff["QUICK/SUSHI"]);
-  console.log("SUSHI->QUICK: ", priceDiff["SUSHI/QUICK"]);
+  console.log("estimated profits | QUICK->SUSHI:", priceDiff["QUICK/SUSHI"]);
+  console.log("estimated profits | SUSHI->QUICK:", priceDiff["SUSHI/QUICK"]);
+
   // 裁定機会があるならアービトラージ
   arbitrage(priceDiff["SUSHI/QUICK"])
   console.log(
@@ -158,24 +174,19 @@ const updateReserves = async () => {
   const sushiReserves = await SushiContract.getReserves();
   [quickUsdcReserves, quickJpycReserves] = quickReserves;
   [sushiUsdcReserves, sushiJpycReserves] = sushiReserves;
-  console.log("(Quick) first: ", [
-    quickUsdcReserves.toString(),
-    quickJpycReserves.toString(),
-  ]);
-  console.log("(Sushi) first: ", [
-    sushiUsdcReserves.toString(),
-    sushiJpycReserves.toString(),
-  ]);
-  // DEX間の価格差の取得
-  const priceDiff = calFunc.rateDiff(
+  let rates = calFunc.rate(
     quickJpycReserves,
     quickUsdcReserves,
     sushiJpycReserves,
-    sushiUsdcReserves,
-    config.tradeQuantity
+    sushiUsdcReserves
   );
-  console.log("QUICK->SUSHI: ", priceDiff["QUICK/SUSHI"]);
-  console.log("SUSHI->QUICK: ", priceDiff["SUSHI/QUICK"]);
+  globalRates = rates;
+  console.log("(first)");
+  console.log("buy rate          | QuickSwap:", rates.QUICKSWAP.buy);
+  console.log("buy rate          | SushiSwap:", rates.SUSHISWAP.buy);
+  // DEX間の価格差の取得
+  console.log("estimated profits | QUICK->SUSHI:", priceDiff["QUICK/SUSHI"]);
+  console.log("estimated profits | SUSHI->QUICK:", priceDiff["SUSHI/QUICK"]);
   // コントラクトの保有しているトークン量
   beforeUsdc = await calFunc.getBalance(
     address.TOKEN.USDC.Decimals,
@@ -199,18 +210,20 @@ const updateReserves = async () => {
     const sushiLatestReserves = await SushiContract.getReserves();
     [quickUsdcReserves, quickJpycReserves] = quickLatestReserves;
     [sushiUsdcReserves, sushiJpycReserves] = sushiLatestReserves;
-    console.log("(Quick) latest:", [
-      quickUsdcReserves.toString(),
-      quickJpycReserves.toString(),
-    ]);
-    console.log("(Sushi) latest:", [
-      sushiUsdcReserves.toString(),
-      sushiJpycReserves.toString(),
-    ]);
+    rates = calFunc.rate(
+      quickJpycReserves,
+      quickUsdcReserves,
+      sushiJpycReserves,
+      sushiUsdcReserves
+    );
+    console.log("(latest)");
+    printFunc.Rates(globalRates.QUICKSWAP.buy, rates.QUICKSWAP.buy, "QuickSwap");
+    printFunc.Rates(globalRates.SUSHISWAP.buy, rates.SUSHISWAP.buy, "SushiSwap");
     console.log(
       "----------------------------------------------------------------"
     );
-  }, 300000); // 5分
+    globalRates = rates;
+  }, 60000); // 5分
 };
 updateReserves();
 
