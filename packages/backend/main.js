@@ -226,8 +226,8 @@ const updateReserves = async () => {
     "----------------------------------------------------------------"
   );
 
-  // QuickContract.on("Swap", onSwapQuick);
-  // SushiContract.on("Swap", onSwapSushi);
+  QuickContract.on("Swap", onSwapQuick);
+  SushiContract.on("Swap", onSwapSushi);
 
   setInterval(async () => {
     const quickLatestReserves = await QuickContract.getReserves();
