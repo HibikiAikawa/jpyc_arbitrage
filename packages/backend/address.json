@@ -1,21 +1,42 @@
 {
     "TOKEN":{
-        "JPYC":{"Address": "0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c", "Decimals": 18},
-        "JPYCv2":{"Address": "0x431D5dfF03120AFA4bDf332c61A6e1766eF37BDB", "Decimals": 18},
-        "USDC":{"Address": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", "Decimals": 6}
+        "MATIC":{
+            "JPYC":{"Address": "0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c", "Decimals": 18},
+            "JPYCv2":{"Address": "0x431D5dfF03120AFA4bDf332c61A6e1766eF37BDB", "Decimals": 18},
+            "USDC":{"Address": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", "Decimals": 6}
+        },
+        "ASTAR":{
+            "JPYC":{"Address": "0x431D5dfF03120AFA4bDf332c61A6e1766eF37BDB", "Decimals": 18},
+            "USDC":{"Address": "0x6a2d262D56735DbA19Dd70682B39F6bE9a931D98", "Decimals": 6},
+            "WASTR":{"Address": "0xAeaaf0e2c81Af264101B9129C00F4440cCF0F720", "Decimals": 18}
+        }
     },
     "POOL":{
-        "QUICKSWAP": "0x205995421C72Dc223F36BbFad78B66EEa72d2677",
-        "QUICKSWAPV2": "0x59377dbd9f550568540cAe0B21412bee1cC3F439",
-        "SUSHISWAP":"0xFbaE8e2D04a67C10047D83ee9B8AeFFE7F6EA3f4"
+        "MATIC":{
+            "QUICKSWAP":{
+                "USDC/JPYC":"0x205995421C72Dc223F36BbFad78B66EEa72d2677",
+                "USDC/JPYCv2":"0x59377dbd9f550568540cAe0B21412bee1cC3F439"
+            },
+            "SUSHISWAP":{
+                "USDC/JPYC":"0xFbaE8e2D04a67C10047D83ee9B8AeFFE7F6EA3f4"
+            }
+        },
+        "ASTAR":{
+            "ARTHSWAP": {
+                "JPYC/WASTR":"0xF041a8e6e27341F5f865a22f01Fa37e065c32156",
+                "WASTR/USDC":"0xBB1290c1829007F440C771b37718FAbf309cd527"
+            }
+        }
     },
     "ROUTER":{
         "QUICKSWAP": "0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff",
-        "SUSHISWAP":"0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506"
+        "SUSHISWAP":"0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506",
+        "ARTHSWAP":"0xE915D2393a08a00c5A463053edD31bAe2199b9e7" 
     },
     "FACTORY":{
         "QUICKSWAP": "0x5757371414417b8C6CAad45bAeF941aBc7d3Ab32",
-        "SUSHISWAP":"0xc35DADB65012eC5796536bD9864eD8773aBc74C4"  
+        "SUSHISWAP":"0xc35DADB65012eC5796536bD9864eD8773aBc74C4",
+        "ARTHSWAP":"0xA9473608514457b4bF083f9045fA63ae5810A03E" 
     },
     "CONTRACT":"0x4dC624B08f2Af43f04Ed2D78c05c2bCDACaDd70a",
     "WALLET":"0x23c14ba045f6a05de44b2d66d19c41e0c9fb3092"
