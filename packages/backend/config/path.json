@@ -1,0 +1,17 @@
+{
+  "ARTH/QUICK": {
+    "PATH":[
+      {"CHAIN":"ASTAR","DEX":"ARTHSWAP","PAIR":"WASTR/USDC"},
+      {"CHAIN":"ASTAR","DEX":"ARTHSWAP","PAIR":"JPYC/WASTR"}, 
+      {"CHAIN":"MATIC","DEX":"QUICKSWAP","PAIR":"USDC/JPYC"}
+    ],
+    "TOKEN":"USDC"
+  },
+  "QUICK/SUSHI":{
+    "PATH":[
+      {"CHAIN":"MATIC","DEX":"QUICKSWAP","PAIR":"USDC/JPYC"},
+      {"CHAIN":"MATIC","DEX":"SUSHISWAP","PAIR":"USDC/JPYC"}
+    ],
+    "TOKEN":"USDC"
+  }
+}

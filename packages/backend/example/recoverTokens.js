@@ -1,7 +1,7 @@
 const fs = require("fs");
 
 const address = JSON.parse(fs.readFileSync("./address.json", "utf8"));
-const arbFunc = require("./arbHandler");
+const arbFunc = require("../arbHandler");
 
 const main = async () => {
     console.log('recover JPYC.')

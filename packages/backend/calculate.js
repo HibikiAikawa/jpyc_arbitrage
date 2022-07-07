@@ -1,9 +1,8 @@
 const fs = require("fs");
 
-const arbFunc = require("./arbHandler");
-
-const address = JSON.parse(fs.readFileSync("./address.json", "utf8"));
-const config = JSON.parse(fs.readFileSync("./config.json", "utf8"));
+const address = JSON.parse(fs.readFileSync("./config/address.json", "utf8"));
+const path = JSON.parse(fs.readFileSync("./config/path.json", "utf8"));
+// const config = JSON.parse(fs.readFileSync("./config.json", "utf8"));
 
 /**
  * BigNumberをfloat型に計算しなおす
@@ -27,14 +26,71 @@ const strToFloat = (decimals, amount, minimum = 5) => {
  * @param {float} reserveOut - 受け取るトークンのステーク量
  * @param {float} amountIn -  トークンの交換量
  * @param {float} margin - DEXに設定されている手数料
- * @returns - 取引レート
+ * @returns - 受け取るトークン量
  */
-const getRate = (reserveIn, reserveOut, amountIn, margin = 0.3) => {
+const getAmount = (reserveIn, reserveOut, amountIn, margin = 0.3) => {
   const amountInWithFee = amountIn * (100 - margin);
   const numerator = amountInWithFee * reserveOut;
   const denominator = reserveIn * 100 + amountInWithFee;
   const amountOut = numerator / denominator;
   return amountOut;
+};
+
+/**
+ * _pathで指定されたプールに沿ってSwapする
+ * @param {object} tokenReserves - 全プールの保有トークン量
+ * @param {list} _path - Swapするプールのリスト
+ * @param {float} amountIn - 最初にスワップするトークン量(ether建)
+ * @param {string} startTokenName - 最初にスワップする手持ちトークン名
+ * @returns 最終的に返ってくるトークン量
+ */
+const getAmounts = (tokenReserves, _path, amountIn, startTokenName) => {
+  let retAmount = amountIn;
+  let tokenIn = startTokenName;
+  let reserveOut;
+  for (let i = 0; i < _path.length; i += 1) {
+    const { CHAIN, DEX, PAIR } = _path[i];
+    const reserveIn = strToFloat(
+      address.TOKEN[CHAIN][tokenIn].Decimals,
+      tokenReserves[CHAIN][DEX][PAIR][tokenIn].toString()
+    );
+    // pairに記載されているペア名の抽出
+    const [, token0Name, token1Name, ,] = PAIR.match(/(\w+)\/(\w+)/);
+    if (tokenIn === token0Name) {
+      reserveOut = strToFloat(
+        address.TOKEN[CHAIN][token1Name].Decimals,
+        tokenReserves[CHAIN][DEX][PAIR][token1Name].toString()
+      );
+      tokenIn = token1Name;
+    } else {
+      reserveOut = strToFloat(
+        address.TOKEN[CHAIN][token0Name].Decimals,
+        tokenReserves[CHAIN][DEX][PAIR][token0Name].toString()
+      );
+      tokenIn = token0Name;
+    }
+    retAmount = getAmount(reserveIn, reserveOut, retAmount);
+  }
+  return retAmount;
+};
+
+/**
+ * path.jsonに書かれているアービトラージペアの推定収益を計算
+ * @param {object} tokenReserves - 全プールの保有トークン量
+ */
+const estimateProfit = (tokenReserves) => {
+  console.log("estimate price diff");
+  Object.keys(path).forEach((pairKey) => {
+    // TODO 交換トークンの最適化必要
+    const amountIn = 1;
+    const retAmount = getAmounts(
+      tokenReserves,
+      path[pairKey].PATH,
+      amountIn,
+      path[pairKey].TOKEN
+    );
+    console.log(pairKey, retAmount - amountIn);
+  });
 };
 
 /**
@@ -52,25 +108,25 @@ const rate = (
   sushiUsdcReserves
 ) => {
   // amountInJpyc売って、買えるquickOutUsdc
-  const quickOutUsdc = getRate(
+  const quickOutUsdc = getAmount(
     strToFloat(address.TOKEN.JPYC.Decimals, quickJpycReserves.toString()),
     strToFloat(address.TOKEN.USDC.Decimals, quickUsdcReserves.toString()),
     config.amountInJpyc
   );
   // amountInUsdc売って、買えるquickOutJpyc
-  const quickOutJpyc = getRate(
+  const quickOutJpyc = getAmount(
     strToFloat(address.TOKEN.USDC.Decimals, quickUsdcReserves.toString()),
     strToFloat(address.TOKEN.JPYC.Decimals, quickJpycReserves.toString()),
     config.amountInUsdc
   );
   // amountInJpyc売って、買えるsushiOutUsdc
-  const sushiOutUsdc = getRate(
+  const sushiOutUsdc = getAmount(
     strToFloat(address.TOKEN.JPYC.Decimals, sushiJpycReserves.toString()),
     strToFloat(address.TOKEN.USDC.Decimals, sushiUsdcReserves.toString()),
     config.amountInJpyc
   );
   // amountInUsdc売って、買えるsushikOutJpyc
-  const sushiOutJpyc = getRate(
+  const sushiOutJpyc = getAmount(
     strToFloat(address.TOKEN.USDC.Decimals, sushiUsdcReserves.toString()),
     strToFloat(address.TOKEN.JPYC.Decimals, sushiJpycReserves.toString()),
     config.amountInUsdc
@@ -138,13 +194,13 @@ const rateDiff = (
 ) => {
   // amountIn(USDC) -> quickOutJPYC(JPYC) -> sushiOutUsdc(USDC)で裁定機会を探る
   // USDC -> QUICKSWAP -> JPYC
-  const quickOutJpyc = getRate(
+  const quickOutJpyc = getAmount(
     strToFloat(address.TOKEN.USDC.Decimals, quickUsdcReserves.toString()),
     strToFloat(address.TOKEN.JPYC.Decimals, quickJpycReserves.toString()),
     amountIn
   );
   // JPYC -> SUSHISWAP -> USDC
-  const sushiOutUsdc = getRate(
+  const sushiOutUsdc = getAmount(
     strToFloat(address.TOKEN.JPYC.Decimals, sushiJpycReserves.toString()),
     strToFloat(address.TOKEN.USDC.Decimals, sushiUsdcReserves.toString()),
     quickOutJpyc
@@ -152,14 +208,14 @@ const rateDiff = (
 
   // amountIn(USDC) -> sushiOutJPYC(JPYC) -> quickOutUsdc(USDC)で裁定機会を探る
   // USDC -> SUSHISWAP -> JPYC
-  const sushiOutJpyc = getRate(
+  const sushiOutJpyc = getAmount(
     strToFloat(address.TOKEN.USDC.Decimals, sushiUsdcReserves.toString()),
     strToFloat(address.TOKEN.JPYC.Decimals, sushiJpycReserves.toString()),
     amountIn
   );
 
   // JPYC -> QUICKSWAP -> USDC
-  const quickOutUsdc = getRate(
+  const quickOutUsdc = getAmount(
     strToFloat(address.TOKEN.JPYC.Decimals, quickJpycReserves.toString()),
     strToFloat(address.TOKEN.USDC.Decimals, quickUsdcReserves.toString()),
     sushiOutJpyc
@@ -171,22 +227,7 @@ const rateDiff = (
   };
 };
 
-/**
- * 現在の指定したトークン量を調べる。量はwei建てでなくether建て
- * @param {int} decimals - トークンのDecimals
- * @param {string} tokenAddress - トークンアドレス
- * @returns  ether建でのトークン量
- */
-const getBalance = async (decimals, tokenAddress) => {
-  const quantity = await arbFunc.getBalance(tokenAddress);
-  const balance = strToFloat(decimals, quantity.toString());
-  if (isNaN(balance)) {
-    return 0.0;
-  }
-  return balance;
-};
-
-exports.getBalance = getBalance;
 exports.strToFloat = strToFloat;
 exports.rateDiff = rateDiff;
 exports.rate = rate;
+exports.estimateProfit = estimateProfit;
