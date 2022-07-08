@@ -119,7 +119,7 @@ const startPoolEvent = async (chain, dex, pair, poolAddress) => {
       token1Reserves,
     };
     dexEvent.emit("Update", variable);
-  }, 60000); // 5分
+  }, 300000); // 5分
 };
 
 /**

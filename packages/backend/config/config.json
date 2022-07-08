@@ -1,7 +1,16 @@
 {
-    "gasPrice":"60000000000",
-    "gasLimit":"2000000",
-    "amountInJpyc":1300,
-    "amountInUsdc":10,
-    "tradeQuantity": 0.05
+    "gasProp":{
+        "gasPrice":"60000000000",
+        "gasLimit":"2000000"
+    },
+    "tradeProp":{
+        "amountInJpyc":1300,
+        "amountInUsdc":10,
+        "tradeQuantity": 0.05
+    },
+    "csvProp":{
+        "csvName":"profit_estimation.csv"
+    }
+
+
 }

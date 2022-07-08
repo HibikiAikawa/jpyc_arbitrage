@@ -5,15 +5,19 @@ const ethers = require("ethers");
 
 const print = require("./utils/printer");
 const utils = require("./utils/utils");
+const csvFunc = require("./utils/csv_utils");
 const eventFunc = require("./eventHandler");
 const calcFunc = require("./calculate");
 // const arbFunc = require("./arbHandler");
 
 const address = JSON.parse(fs.readFileSync("./config/address.json", "utf8"));
-// const config = JSON.parse(fs.readFileSync("./config.json", "utf8"));
+const config = JSON.parse(fs.readFileSync("./config/config.json", "utf8"));
 
 // 各プールのトークン保有量を記録するJSON
 const tokenReserves = utils.createTokenJson(address);
+// アービトラージの取引利益の推定用
+const csvData = csvFunc.readCsv(config.csvProp.csvName)
+
 
 /**
  * ブロックチェーンに記録されているグローバルなトークン量を問い合わせた時に使うイベント関数
@@ -39,7 +43,7 @@ const onSwap = (variable) => {
   const { senderAddress, amount0In, amount1In, amount0Out, amount1Out, to } =
     args;
   const tokens = utils.sortTokens(address, chain, pair);
-  console.log("\033[10F\033[0J");
+  // console.log("\033[10F\033[0J");
   console.log(`(${event}) --- ${dex} - ${pair}`);
   // トークンの流れ
   // token0:コントラクト -> ユーザー    token1:ユーザー -> コントラクト
@@ -64,8 +68,9 @@ const onSwap = (variable) => {
   }
 
   // Swapによって裁定機会が生まれたかチェック
-  calcFunc.estimateProfit(tokenReserves);
-  print.printTokenReserves(tokenReserves);
+  const estimationData = calcFunc.estimateProfit(tokenReserves);
+  csvFunc.writeOutProfit(config.csvProp.csvName, csvData, estimationData)
+    // print.printTokenReserves(tokenReserves);
 };
 
 const onMint = (variable) => {
@@ -99,11 +104,10 @@ const main = async () => {
   eventFunc.dexEvent.on("Mint", onMint);
   eventFunc.dexEvent.on("Burn", onBurn);
 
-  print.printTokenReserves(tokenReserves);
   setInterval(async () => {
-    console.log("\033[10F\033[0J");
+    // console.log("\033[10F\033[0J");
     console.log("(update)");
-    print.printTokenReserves(tokenReserves);
+    // print.printTokenReserves(tokenReserves);
   }, 60000); // 5分
 };
 

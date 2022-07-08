@@ -1,7 +1,7 @@
 const fs = require("fs");
 
 const address = JSON.parse(fs.readFileSync("./config/address.json", "utf8"));
-const path = JSON.parse(fs.readFileSync("./config/path.json", "utf8"));
+const pathJson = JSON.parse(fs.readFileSync("./config/path.json", "utf8"));
 // const config = JSON.parse(fs.readFileSync("./config.json", "utf8"));
 
 /**
@@ -79,18 +79,66 @@ const getAmounts = (tokenReserves, _path, amountIn, startTokenName) => {
  * @param {object} tokenReserves - 全プールの保有トークン量
  */
 const estimateProfit = (tokenReserves) => {
+  const estimationData = [];
   console.log("estimate price diff");
-  Object.keys(path).forEach((pairKey) => {
-    // TODO 交換トークンの最適化必要
-    const amountIn = 1;
-    const retAmount = getAmounts(
-      tokenReserves,
-      path[pairKey].PATH,
-      amountIn,
-      path[pairKey].TOKEN
-    );
-    console.log(pairKey, retAmount - amountIn);
+  Object.keys(pathJson).forEach((dexPairKey) => {
+    Object.keys(pathJson[dexPairKey]).forEach((tokenPairKey) => {
+      const { PATH, TOKEN:startToken } = pathJson[dexPairKey][tokenPairKey];
+      // TODO 交換トークンの最適化必要
+      const amountIn = 1;
+      // Pathを順ルートから裁定価格を計算
+      const retAmount = getAmounts(tokenReserves, PATH, amountIn, startToken);
+      const forwardProfit = retAmount - amountIn;
+      estimationData.push({
+        dexPairKey,
+        tokenPairKey,
+        amountIn,
+        profit: forwardProfit,
+        direction: "forward",
+        startToken,
+      });
+
+      // Pathを逆ルートから裁定価格を推定する
+      const retAmountRev = getAmounts(
+        tokenReserves,
+        [...PATH].reverse(),
+        amountIn,
+        startToken
+      );
+      const backwardProfit = retAmountRev - amountIn;
+      estimationData.push({
+        dexPairKey,
+        tokenPairKey,
+        amountIn,
+        profit: backwardProfit,
+        direction: "backward",
+        startToken,
+      });
+
+      // log出力
+      if (forwardProfit > 0) {
+        console.log(
+          `\x1b[31m(forward )${dexPairKey} - ${tokenPairKey}: ${forwardProfit}\x1b[0m`
+        );
+      } else {
+        console.log(
+          `(forward )${dexPairKey} - ${tokenPairKey}: ${forwardProfit}`
+        );
+      }
+
+      if (backwardProfit > 0) {
+        console.log(
+          `\x1b[31m(backward )${dexPairKey} - ${tokenPairKey}: ${backwardProfit}\x1b[0m`
+        );
+      } else {
+        console.log(
+          `(backward)${dexPairKey} - ${tokenPairKey}: ${backwardProfit}`
+        );
+      }
+    });
   });
+
+  return estimationData;
 };
 
 /**
