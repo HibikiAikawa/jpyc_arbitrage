@@ -2,6 +2,19 @@ const fs = require("fs");
 const { stringify } = require("csv-stringify/sync");
 const { parse } = require("csv-parse/sync");
 
+const config = JSON.parse(fs.readFileSync("./config/config.json", "utf8"));
+
+// 直近で裁定機会が発生していたかをチェックするための変数
+// 直近で裁定機会が発生していた場合はcsvに書き込まないようにする
+const profitCheck = JSON.parse(
+  fs.readFileSync(`./config/${config.file.path}`, "utf8")
+);
+Object.keys(profitCheck).forEach((dexPair) => {
+  Object.keys(profitCheck[dexPair]).forEach((tokenPair) => {
+    profitCheck[dexPair][tokenPair] = { forward: false, backward: false };
+  });
+});
+
 /**
  * csvNameのcsvファイルがあるならそれを読み込み.無ければ新規作成
  * @param {string} csvName - csvのファイル名
@@ -62,15 +75,6 @@ const writeRow = (
   });
   fs.writeFileSync(csvName, csvString);
 };
-
-// 直近で裁定機会が発生していたかをチェックするための変数
-// 直近で裁定機会が発生していた場合はcsvに書き込まないようにする
-const profitCheck = JSON.parse(fs.readFileSync("./config/path.json", "utf8"));
-Object.keys(profitCheck).forEach((dexPair) => {
-  Object.keys(profitCheck[dexPair]).forEach((tokenPair) => {
-    profitCheck[dexPair][tokenPair] = { forward: false, backward: false };
-  });
-});
 
 /**
  * estimationDataに含まれるデータの中からプラス収益になるアービトラージ取引だけをcsvファイルに追加する

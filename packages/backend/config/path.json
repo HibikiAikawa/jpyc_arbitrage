@@ -1,19 +1,19 @@
 {
-  "ARTH/QUICK": {
-    "USDC/JPYC":{
+  "ARTHSWAP/QUICKSWAP": {
+    "JPYC/USDC":{
       "PATH":[
-        {"CHAIN":"ASTAR","DEX":"ARTHSWAP","PAIR":"WASTR/USDC"},
+        {"CHAIN":"ASTAR","DEX":"ARTHSWAP","PAIR":"USDC/WASTR"},
         {"CHAIN":"ASTAR","DEX":"ARTHSWAP","PAIR":"JPYC/WASTR"}, 
-        {"CHAIN":"MATIC","DEX":"QUICKSWAP","PAIR":"USDC/JPYC"}
+        {"CHAIN":"MATIC","DEX":"QUICKSWAP","PAIR":"JPYC/USDC"}
       ],
       "TOKEN":"USDC"
     }
   },
-  "QUICK/SUSHI":{
-    "USDC/JPYCv1":{
+  "QUICKSWAP/SUSHISWAP":{
+    "JPYCv1/USDC":{
       "PATH":[
-        {"CHAIN":"MATIC","DEX":"QUICKSWAP","PAIR":"USDC/JPYCv1"},
-        {"CHAIN":"MATIC","DEX":"SUSHISWAP","PAIR":"USDC/JPYCv1"}
+        {"CHAIN":"MATIC","DEX":"QUICKSWAP","PAIR":"JPYCv1/USDC"},
+        {"CHAIN":"MATIC","DEX":"SUSHISWAP","PAIR":"JPYCv1/USDC"}
       ],
       "TOKEN":"USDC"
     },

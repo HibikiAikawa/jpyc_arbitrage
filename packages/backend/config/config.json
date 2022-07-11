@@ -10,6 +10,10 @@
     },
     "csvProp":{
         "csvName":"profit_estimation.csv"
+    },
+    "file":{
+        "address":"address_test.json",
+        "path":"path_test.json"
     }
 
 

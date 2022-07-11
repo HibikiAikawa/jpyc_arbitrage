@@ -46,5 +46,18 @@ const sortTokens = (address, chain, pair) => {
   return [token0, token1];
 };
 
+const sortStr = (strA, strB) => {
+  let str0;
+  let str1;
+  if (strA < strB) {
+    [str0, str1] = [strA, strB]
+  } else {
+    [str0, str1] = [strB, strA]
+  }
+  return [str0, str1]
+
+}
+
 exports.createTokenJson = createTokenJson;
 exports.sortTokens = sortTokens;
+exports.sortStr = sortStr;

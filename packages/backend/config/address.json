@@ -15,19 +15,19 @@
     "POOL":{
         "MATIC":{
             "QUICKSWAP":{
-                "USDC/JPYCv1":"0x205995421C72Dc223F36BbFad78B66EEa72d2677",
-                "USDC/JPYC":"0x59377dbd9f550568540cAe0B21412bee1cC3F439",
+                "JPYCv1/USDC":"0x205995421C72Dc223F36BbFad78B66EEa72d2677",
+                "JPYC/USDC":"0x59377dbd9f550568540cAe0B21412bee1cC3F439",
                 "USDC/WETH":"0x853ee4b2a13f8a742d64c8f088be7ba2131f670d"
             },
             "SUSHISWAP":{
-                "USDC/JPYCv1":"0xFbaE8e2D04a67C10047D83ee9B8AeFFE7F6EA3f4",
+                "JPYCv1/USDC":"0xFbaE8e2D04a67C10047D83ee9B8AeFFE7F6EA3f4",
                 "USDC/WETH":"0x34965ba0ac2451A34a0471F04CCa3F990b8dea27"
             }
         },
         "ASTAR":{
             "ARTHSWAP": {
                 "JPYC/WASTR":"0xF041a8e6e27341F5f865a22f01Fa37e065c32156",
-                "WASTR/USDC":"0xBB1290c1829007F440C771b37718FAbf309cd527"
+                "USDC/WASTR":"0xBB1290c1829007F440C771b37718FAbf309cd527"
             }
         }
     },

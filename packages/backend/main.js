@@ -10,14 +10,15 @@ const eventFunc = require("./eventHandler");
 const calcFunc = require("./calculate");
 // const arbFunc = require("./arbHandler");
 
-const address = JSON.parse(fs.readFileSync("./config/address.json", "utf8"));
 const config = JSON.parse(fs.readFileSync("./config/config.json", "utf8"));
 
+const address = JSON.parse(
+  fs.readFileSync(`./config/${config.file.address}`, "utf8")
+);
 // 各プールのトークン保有量を記録するJSON
 const tokenReserves = utils.createTokenJson(address);
 // アービトラージの取引利益の推定用
-const csvData = csvFunc.readCsv(config.csvProp.csvName)
-
+const csvData = csvFunc.readCsv(config.csvProp.csvName);
 
 /**
  * ブロックチェーンに記録されているグローバルなトークン量を問い合わせた時に使うイベント関数
@@ -69,8 +70,8 @@ const onSwap = (variable) => {
 
   // Swapによって裁定機会が生まれたかチェック
   const estimationData = calcFunc.estimateProfit(tokenReserves);
-  csvFunc.writeOutProfit(config.csvProp.csvName, csvData, estimationData)
-    // print.printTokenReserves(tokenReserves);
+  csvFunc.writeOutProfit(config.csvProp.csvName, csvData, estimationData);
+  // print.printTokenReserves(tokenReserves);
 };
 
 const onMint = (variable) => {

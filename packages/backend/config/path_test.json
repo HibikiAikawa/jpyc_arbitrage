@@ -1,0 +1,101 @@
+{
+  "ARTHSWAP/QUICKSWAP": {
+    "JPYC/USDC": {
+      "PATH": [
+        {
+          "CHAIN": "ASTAR",
+          "DEX": "ARTHSWAP",
+          "PAIR": "USDC/WASTR"
+        },
+        {
+          "CHAIN": "ASTAR",
+          "DEX": "ARTHSWAP",
+          "PAIR": "JPYC/WASTR"
+        },
+        {
+          "CHAIN": "MATIC",
+          "DEX": "QUICKSWAP",
+          "PAIR": "JPYC/USDC"
+        }
+      ],
+      "TOKEN": "USDC"
+    }
+  },
+  "QUICKSWAP/SUSHISWAP": {
+    "JPYCv1/USDC": {
+      "PATH": [
+        {
+          "CHAIN": "MATIC",
+          "DEX": "QUICKSWAP",
+          "PAIR": "JPYCv1/USDC"
+        },
+        {
+          "CHAIN": "MATIC",
+          "DEX": "SUSHISWAP",
+          "PAIR": "JPYCv1/USDC"
+        }
+      ],
+      "TOKEN": "USDC"
+    },
+    "USDC/WETH": {
+      "PATH": [
+        {
+          "CHAIN": "MATIC",
+          "DEX": "QUICKSWAP",
+          "PAIR": "USDC/WETH"
+        },
+        {
+          "CHAIN": "MATIC",
+          "DEX": "SUSHISWAP",
+          "PAIR": "USDC/WETH"
+        }
+      ],
+      "TOKEN": "USDC"
+    },
+    "USDC/WMATIC": {
+      "PATH": [
+        {
+          "CHAIN": "MATIC",
+          "DEX": "QUICKSWAP",
+          "PAIR": "USDC/WMATIC"
+        },
+        {
+          "CHAIN": "MATIC",
+          "DEX": "SUSHISWAP",
+          "PAIR": "USDC/WMATIC"
+        }
+      ],
+      "TOKEN": "USDC"
+    },
+    "DAI/USDC": {
+      "PATH": [
+        {
+          "CHAIN": "MATIC",
+          "DEX": "QUICKSWAP",
+          "PAIR": "DAI/USDC"
+        },
+        {
+          "CHAIN": "MATIC",
+          "DEX": "SUSHISWAP",
+          "PAIR": "DAI/USDC"
+        }
+      ],
+      "TOKEN": "USDC"
+    },
+    "USDC/USDT": {
+      "PATH": [
+        {
+          "CHAIN": "MATIC",
+          "DEX": "QUICKSWAP",
+          "PAIR": "USDC/USDT"
+        },
+        {
+          "CHAIN": "MATIC",
+          "DEX": "SUSHISWAP",
+          "PAIR": "USDC/USDT"
+        }
+      ],
+      "TOKEN": "USDC"
+    }
+  }
+}

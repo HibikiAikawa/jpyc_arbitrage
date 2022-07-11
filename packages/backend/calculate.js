@@ -1,9 +1,13 @@
 const fs = require("fs");
 
-const address = JSON.parse(fs.readFileSync("./config/address.json", "utf8"));
-const pathJson = JSON.parse(fs.readFileSync("./config/path.json", "utf8"));
-// const config = JSON.parse(fs.readFileSync("./config.json", "utf8"));
+const config = JSON.parse(fs.readFileSync("./config/config.json", "utf8"));
 
+const address = JSON.parse(
+  fs.readFileSync(`./config/${config.file.address}`, "utf8")
+);
+const pathJson = JSON.parse(
+  fs.readFileSync(`./config/${config.file.path}`, "utf8")
+);
 /**
  * BigNumberをfloat型に計算しなおす
  * @param {int} decimals - トークンに設定されているdecimals
@@ -83,12 +87,34 @@ const estimateProfit = (tokenReserves) => {
   console.log("estimate price diff");
   Object.keys(pathJson).forEach((dexPairKey) => {
     Object.keys(pathJson[dexPairKey]).forEach((tokenPairKey) => {
-      const { PATH, TOKEN:startToken } = pathJson[dexPairKey][tokenPairKey];
+      const { PATH, TOKEN: startToken } = pathJson[dexPairKey][tokenPairKey];
       // TODO 交換トークンの最適化必要
-      const amountIn = 1;
-      // Pathを順ルートから裁定価格を計算
-      const retAmount = getAmounts(tokenReserves, PATH, amountIn, startToken);
-      const forwardProfit = retAmount - amountIn;
+      const amountInList = [1, 10, 100, 1000, 3000, 5000, 8000, 10000];
+      let forwardProfit;
+      let backwardProfit;
+      let amountIn;
+      for (let i = 0; i < amountInList.length; i += 1) {
+        // Pathを順ルートから裁定価格を計算
+        const retAmount = getAmounts(
+          tokenReserves,
+          PATH,
+          amountInList[i],
+          startToken
+        );
+        amountIn = amountInList[i];
+        if (retAmount - amountInList[i] < 0) {
+          if (i !== 0) {
+            amountIn = amountInList[i - 1];
+            break
+          } else {
+            forwardProfit = retAmount - amountInList[i];
+            break;
+          }
+        }
+        forwardProfit = retAmount - amountInList[i];
+
+      }
+
       estimationData.push({
         dexPairKey,
         tokenPairKey,
@@ -99,13 +125,25 @@ const estimateProfit = (tokenReserves) => {
       });
 
       // Pathを逆ルートから裁定価格を推定する
-      const retAmountRev = getAmounts(
-        tokenReserves,
-        [...PATH].reverse(),
-        amountIn,
-        startToken
-      );
-      const backwardProfit = retAmountRev - amountIn;
+      for (let i = 0; i < amountInList.length; i += 1) {
+        const retAmountRev = getAmounts(
+          tokenReserves,
+          [...PATH].reverse(),
+          amountInList[i],
+          startToken
+        );
+        amountIn = amountInList[i];
+        if (retAmountRev - amountInList[i] < 0) {
+          if (i !== 0) {
+            amountIn = amountInList[i - 1];
+            break
+          } else {
+            backwardProfit = retAmountRev - amountInList[i];
+            break;
+          }
+        }
+        backwardProfit = retAmountRev - amountInList[i];
+      }
       estimationData.push({
         dexPairKey,
         tokenPairKey,
